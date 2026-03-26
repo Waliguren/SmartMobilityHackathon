@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">Dashboard</h2>
+    
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-clipboard-check"></i> Tareas Pendientes</h5>
+                    <h2 class="mb-0">12</h2>
+                </div>
+                <div class="card-footer bg-transparent border-0">
+                    <a href="{{ url_for('tareas.lista_tareas') }}" class="text-white text-decoration-none">Ver todas →</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-warning text-dark">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-exclamation-triangle"></i> Riesgo SLA</h5>
+                    <h2 class="mb-0">3</h2>
+                </div>
+                <div class="card-footer bg-transparent border-0">
+                    <a href="#" class="text-dark text-decoration-none">Ver riesgos →</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-people"></i> Técnicos Activos</h5>
+                    <h2 class="mb-0">8</h2>
+                </div>
+                <div class="card-footer bg-transparent border-0">
+                    <a href="#" class="text-white text-decoration-none">Ver técnicos →</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Tareas Recientes Sin Asignar</h5>
+            <button class="btn btn-primary btn-sm">
+                <i class="bi bi-magic"></i> Optimizar Todas
+            </button>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Tipo</th>
+                            <th>Cliente</th>
+                            <th>Zona</th>
+                            <th>Prioridad</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>#001</td>
+                            <td><span class="badge bg-danger">Incidencia</span></td>
+                            <td>ElektroPlus</td>
+                            <td>Centro</td>
+                            <td><span class="badge bg-danger">Urgente</span></td>
+                            <td>
+                                <a href="{{ url_for('tareas.detalle_tarea', tarea_id=1) }}" class="btn btn-sm btn-outline-primary">Asignar</a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>#002</td>
+                            <td><span class="badge bg-info">Mantenimiento</span></td>
+                            <td>CityParking</td>
+                            <td>Norte</td>
+                            <td><span class="badge bg-warning">Normal</span></td>
+                            <td>
+                                <a href="{{ url_for('tareas.detalle_tarea', tarea_id=2) }}" class="btn btn-sm btn-outline-primary">Asignar</a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>#003</td>
+                            <td><span class="badge bg-success">Puesta en Marcha</span></td>
+                            <td>Hotel Mar</td>
+                            <td>Sur</td>
+                            <td><span class="badge bg-secondary">Baja</span></td>
+                            <td>
+                                <a href="{{ url_for('tareas.detalle_tarea', tarea_id=3) }}" class="btn btn-sm btn-outline-primary">Asignar</a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

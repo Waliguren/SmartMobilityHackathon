@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Gestión de Tareas</h2>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <ul class="nav nav-tabs card-header-tabs" id="tareasTabs" role="tablist">
+                <li class="nav-item">
+                    <button class="nav-link active" id="pendientes-tab" data-bs-toggle="tab" data-bs-target="#pendientes">
+                        Pendientes
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" id="asignadas-tab" data-bs-toggle="tab" data-bs-target="#asignadas">
+                        Asignadas
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" id="completadas-tab" data-bs-toggle="tab" data-bs-target="#completadas">
+                        Completadas
+                    </button>
+                </li>
+            </ul>
+        </div>
+        <div class="card-body">
+            <div class="mb-3">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <select class="form-select">
+                            <option value="">Tipo</option>
+                            <option value="incidencia">Incidencia</option>
+                            <option value="mantenimiento">Mantenimiento</option>
+                            <option value="puesta_marcha">Puesta en Marcha</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select">
+                            <option value="">Zona</option>
+                            <option value="centro">Centro</option>
+                            <option value="norte">Norte</option>
+                            <option value="sur">Sur</option>
+                            <option value="este">Este</option>
+                            <option value="oeste">Oeste</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select">
+                            <option value="">Prioridad</option>
+                            <option value="urgente">Urgente</option>
+                            <option value="normal">Normal</option>
+                            <option value="baja">Baja</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <input type="text" class="form-control" placeholder="Buscar...">
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Tipo</th>
+                            <th>Cliente</th>
+                            <th>Dirección</th>
+                            <th>Zona</th>
+                            <th>Prioridad</th>
+                            <th>Técnico</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>#001</td>
+                            <td><span class="badge bg-danger">Incidencia</span></td>
+                            <td>ElektroPlus</td>
+                            <td>C/ Major, 23</td>
+                            <td>Centro</td>
+                            <td><span class="badge bg-danger">Urgente</span></td>
+                            <td>-</td>
+                            <td>
+                                <a href="{{ url_for('tareas.detalle_tarea', tarea_id=1) }}" class="btn btn-sm btn-primary">Ver</a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>#002</td>
+                            <td><span class="badge bg-info">Mantenimiento</span></td>
+                            <td>CityParking</td>
+                            <td>Av. Ports, 45</td>
+                            <td>Norte</td>
+                            <td><span class="badge bg-warning">Normal</span></td>
+                            <td>Juan García</td>
+                            <td>
+                                <a href="{{ url_for('tareas.detalle_tarea', tarea_id=2) }}" class="btn btn-sm btn-primary">Ver</a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>#003</td>
+                            <td><span class="badge bg-success">Puesta Marcha</span></td>
+                            <td>Hotel Mar</td>
+                            <td>C/ Nou, 12</td>
+                            <td>Sur</td>
+                            <td><span class="badge bg-secondary">Baja</span></td>
+                            <td>María López</td>
+                            <td>
+                                <a href="{{ url_for('tareas.detalle_tarea', tarea_id=3) }}" class="btn btn-sm btn-primary">Ver</a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <nav>
+                <ul class="pagination justify-content-end">
+                    <li class="page-item disabled">
+                        <span class="page-link">Anterior</span>
+                    </li>
+                    <li class="page-item active">
+                        <span class="page-link">1</span>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="#">2</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="#">Siguiente</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+{% endblock %}
