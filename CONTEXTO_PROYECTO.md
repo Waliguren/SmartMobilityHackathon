@@ -13,7 +13,7 @@ Sistema de gestión de rutas para técnicos de campo queinstalan, mantienen y re
 | **App Web (Operaciones)** | Flask (Python) - EN DESARROLLO |
 | **App Móvil (Técnicos)** | Flutter (pendiente) |
 | **Backend/IA** | Firebase + Groq (Llama) |
-| **Mapas** | Flutter Map / Google Maps API |
+| **Mapas** | Leaflet + OpenStreetMap |
 
 ---
 
@@ -24,74 +24,128 @@ SmartMobilityHackathon/
 ├── apps/
 │   ├── manager-web/        # App Flask - EN DESARROLLO
 │   │   ├── src/
-│   │   │   ├── routes/    # auth.py, main.py, tareas.py
-│   │   │   ├── templates/ # HTML templates
-│   │   │   ├── models/    # User model
-│   │   │   └── static/    # CSS, JS
+│   │   │   ├── routes/     # auth.py, main.py, tareas.py, tecnicos.py, riesgos.py, mapa.py
+│   │   │   ├── templates/  # HTML templates
+│   │   │   ├── models/     # User model
+│   │   │   └── static/     # CSS, JS
 │   │   ├── config.py
 │   │   ├── run.py
 │   │   └── requirements.txt
-│   └── technician-mobile/  # App Flutter - PENDIENTE
-├── backend/                # Firebase Functions - PENDIENTE
+│   └── technician-mobile/   # App Flutter - PENDIENTE
+├── backend/                 # Firebase Functions - PENDIENTE
 ├── docker-compose.yml
 ├── docs/
-├── Material Suport Hackato SmAIrt Mobility/  # Material original
-└── CONTEXTO_PROYECTO.md    # Este archivo
+├── Material Suport Hackato SmAIrt Mobility/
+└── CONTEXTO_PROYECTO.md
 ```
 
 ---
 
-## Funcionalidades Acordadas
+## Funcionalidades Implementadas
 
-### App de Escritorio (Operaciones) - ACTUAL
+### App de Escritorio (Operaciones) - COMPLETADO ✅
 
-**1. Login hardcodeado** (IMPLEMENTADO)
+**1. Login hardcodeado**
 - Email: admin@smartmobility.com
 - Password: admin123
 
-**2. Dashboard** - Resumen de tareas, métricas (IMPLEMENTADO)
-**3. Panel de Control** - Estadísticas, tareas críticas (IMPLEMENTADO)
-**4. Gestión de Tareas** - Lista filtrable (IMPLEMENTADO)
-**5. Detalle de Tarea** - Recomendaciones IA (visual, IMPLEMENTADO)
+**2. Dashboard**
+- Tarjetas con métricas (Tareas Pendientes, Riesgos SLA, Técnicos Activos)
+- Tabla de tareas recientes sin asignar
+- Enlaces funcionales a: /riesgos, /tecnicos
 
-### IA de Recomendaciones - PENDIENTE
+**3. Panel de Control**
+- Estadísticas con iconos (todos clickeables)
+- Tareas críticas listadas
+- Técnicos por zona (gráficos de progreso)
 
-**Sistema de prioridades (algoritmo de puntuación):**
-- Tipo incidencia (25%): Crítica=100, Alta=70, Media=40, Baja=20
-- Tipo visita (20%): Correctivo=100, Preventivo=50, PuestaMarcha=30
-- Urgencia SLA (30%): Según tiempo restante
-- Tipo cliente (15%): Premium=100, Estándar=50, Básico=25
-- Días sin atender (10%)
+**4. Gestión de Tareas**
+- Lista con filtros (Tipo, Zona, Prioridad)
+- Tabs: Pendientes, Asignadas, Completadas
+- Paginación
 
-**Recomendación de técnico (algoritmo de matching):**
-- Zona coincide (35%)
-- Carga trabajo (25%)
-- Distancia (20%)
-- Disponibilidad (15%)
-- Especialización (5%)
+**5. Detalle de Tarea**
+- Datos generales de la tarea
+- Recomendaciones IA (visual)
+- Asignación final con formulario
 
-**Explicaciones**: La IA debe explicar "por qué" de sus recomendaciones
+**6. Lista Técnicos**
+- Buscador por nombre
+- Filtros por zona y estado
+- Tabla con: ID, Nombre, Zona, Tareas Hoy, Estado
+- Avatares con iniciales
 
-**Autoaprendizaje**: Guardar correcciones del usuario para ajustar pesos
+**7. Detalle Técnico**
+- Información del técnico
+- Tareas asignadas hoy
+- Estadísticas del mes
 
-### SLA Definidos
+**8. Lista Riesgos SLA**
+- Alerta de riesgos críticos
+- Lista de tareas en riesgo
+- Filtros por severidad
 
-| Cliente | Respuesta | Resolución |
-|---------|-----------|------------|
-| Premium | 4h | 24h |
-| Estándar | 8h | 48h |
-| Básico | 24h | 72h |
+**9. Detalle Riesgo**
+- Información del riesgo
+- SLA detallado (respuesta y resolución)
+- Acciones rápidas
 
-Multiplicadores por tipo de incidencia:
-- Crítica: x0.5
-- Alta: x0.75
-- Media: x1.0
-- Baja: x1.5
+**10. Mapa de Tareas** ✅ NUEVO
+- Mapa de España con Leaflet + OpenStreetMap
+- Marcadores circulares por tipo:
+  - 🔴 Incidencia (rojo)
+  - 🔵 Mantenimiento (azul)
+  - 🟢 Puesta en Marcha (verde)
+- Filtros por tipo, estado y técnico
+- Estadísticas en tiempo real
+- Popup con detalles al hacer click
+- Leyenda visible
 
-### Flujo de Trabajo
+---
 
-1. **Departamento de Operaciones**: Asigna prioridad y técnico a tareas (con ayuda de IA)
-2. **Técnicos**: Reciben tareas en su app móvil, planifican su ruta con sugerencias del algoritmo
+## Tipos de Tareas (Colores)
+
+| Tipo | Color | Descripción |
+|------|-------|-------------|
+| **Incidencia** | 🔴 Rojo | Problemas/averías |
+| **Mantenimiento** | 🔵 Azul | Mantenimiento preventivo |
+| **Puesta en Marcha** | 🟢 Verde | Nueva instalación |
+
+## Estados de Tareas
+
+| Estado | Descripción |
+|--------|-------------|
+| Por asignar | Sin técnico asignado |
+| Asignada | En proceso (tiene técnico) |
+| Resuelta | Completada |
+
+---
+
+## Rutas Implementadas
+
+| Ruta | Blueprint | Descripción |
+|------|-----------|-------------|
+| `/login` | auth | Login |
+| `/logout` | auth | Logout |
+| `/dashboard` | main | Dashboard principal |
+| `/panel` | main | Panel de control |
+| `/tareas` | tareas | Lista de tareas |
+| `/tareas/<id>` | tareas | Detalle de tarea |
+| `/mapa` | mapa | Mapa de tareas (NUEVO) |
+| `/api/tareas-mapa` | mapa | API de tareas para el mapa |
+| `/tecnicos` | tecnicos | Lista de técnicos |
+| `/tecnicos/<id>` | tecnicos | Detalle de técnico |
+| `/riesgos` | riesgos | Lista de riesgos SLA |
+| `/riesgos/<id>` | riesgos | Detalle de riesgo |
+
+---
+
+## Archivos Creados/Actualizados
+
+- `/apps/manager-web/src/routes/mapa.py` - NUEVO: Ruta del mapa + API
+- `/apps/manager-web/src/templates/mapa.html` - NUEVO: Página con Leaflet
+- `/apps/manager-web/src/__init__.py` - Actualizado con blueprint mapa
+- `/apps/manager-web/src/templates/base.html` - Actualizado con navegación
 
 ---
 
@@ -100,54 +154,23 @@ Multiplicadores por tipo de incidencia:
 ### ✅ Completado
 - App Flask funcionando en puerto 5000
 - Login hardcodeado operativo
-- Dashboard accesible
-- Panel de control implementado
+- Dashboard con enlaces funcionales
+- Panel de control con elementos clickeables
 - Lista de tareas implementada
 - Detalle de tareas con UI de recomendaciones IA
-- Base de datos SQLite local (no usada para login)
+- Lista de técnicos implementada
+- Detalle de técnico implementado
+- Lista de riesgos SLA implementada
+- Detalle de riesgos implementado
+- Mapa de tareas con filtros por tipo, estado y técnico
+- Navegación superior funcional
 
 ### ⏳ Pendiente
+- Filtros con JavaScript en listas
 - Base de datos real (Firebase Firestore)
-- IA real (Groq + Llama 3.1)
+- IA real (Groq + Llama)
 - Conexión con Firebase
-- API endpoints para tareas
 - App Flutter para técnicos
-
----
-
-## Historial de Conversación
-
-### 26 Marzo 2026 - Desarrollo Inicial
-1. Revisado material de soporte del Hackathon
-2. Definido Stack tecnológico (Flutter + Electron + Firebase + Groq)
-3. Diseñada arquitectura de la app de escritorio
-4. Implementado sistema de login con Flask
-5. Creadas páginas: Dashboard, Panel, Tareas, Detalle
-6. Configurada base de datos SQLite (no usada - hardcoded login)
-7. Corregidos imports de módulos (app → src)
-8. Guardado contexto inicial
-
----
-
-## Archivos Creados
-
-- `/apps/manager-web/src/__init__.py` - App factory Flask
-- `/apps/manager-web/src/routes/auth.py` - Login/register/logout
-- `/apps/manager-web/src/routes/main.py` - Dashboard/Panel
-- `/apps/manager-web/src/routes/tareas.py` - Tareas
-- `/apps/manager-web/src/models/user.py` - Modelo usuario
-- `/apps/manager-web/src/templates/base.html` - Layout base
-- `/apps/manager-web/src/templates/dashboard.html` - Dashboard
-- `/apps/manager-web/src/templates/panel.html` - Panel control
-- `/apps/manager-web/src/templates/auth/login.html` - Login
-- `/apps/manager-web/src/templates/auth/register.html` - Registro
-- `/apps/manager-web/src/templates/tareas/lista.html` - Lista tareas
-- `/apps/manager-web/src/templates/tareas/detalle.html` - Detalle tarea
-- `/apps/manager-web/src/static/css/style.css` - Estilos Bootstrap
-- `/apps/manager-web/src/static/js/main.js` - JS
-- `/apps/manager-web/config.py` - Configuración
-- `/apps/manager-web/run.py` - Punto de entrada
-- `/apps/manager-web/requirements.txt` - Dependencias
 
 ---
 
@@ -156,7 +179,7 @@ Multiplicadores por tipo de incidencia:
 1. Login actual es HARDCODED - sin base de datos (temporal)
 2. La base de datos será Firebase Firestore (no SQLite)
 3. IA usará Groq con modelo Llama 3.1 (gratis, sin límites diarios)
-4. Las tareas vendrán de Firebase (no se crean manualmente en la app)
+4. Las tareas vendrán de Firebase
 5. La IA debe explicar el "por qué" de sus recomendaciones
 6. Debe tener autoaprendizaje (guardar correcciones del usuario)
 7. Las tareas vendrán de un sistema externo ya creado
@@ -166,11 +189,9 @@ Multiplicadores por tipo de incidencia:
 
 ## Próximos Pasos Sugeridos
 
-1. Configurar proyecto Firebase y credenciales
-2. Crear estructura de datos en Firestore
-3. Implementar API de tareas conectando a Firebase
-4. Implementar servicio Groq para recomendaciones de prioridad
-5. Implementar servicio Groq para recomendaciones de técnico
-6. Añadir sistema de autoaprendizaje
-7. Mejorar UI del detalle de tareas
-8. Crear app Flutter para técnicos
+1. Conectar mapa con Firebase para datos reales
+2. Implementar filtros con JavaScript en listas
+3. Configurar proyecto Firebase y credenciales
+4. Crear estructura de datos en Firestore
+5. Implementar servicio Groq para recomendaciones
+6. Crear app Flutter para técnicos

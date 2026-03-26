@@ -29,12 +29,14 @@ def create_app(config_class=Config):
     from src.routes.auth import auth
     from src.routes.tecnicos import tecnicos
     from src.routes.riesgos import riesgos
+    from src.routes.mapa import mapa
     
     app.register_blueprint(main)
     app.register_blueprint(tareas)
     app.register_blueprint(auth)
     app.register_blueprint(tecnicos)
     app.register_blueprint(riesgos)
+    app.register_blueprint(mapa)
     
     with app.app_context():
         db.create_all()

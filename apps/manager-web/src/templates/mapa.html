@@ -1,0 +1,236 @@
+{% extends "base.html" %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+    #map {
+        height: calc(100vh - 150px);
+        width: 100%;
+        border-radius: 10px;
+    }
+    .filtros-mapa {
+        background: white;
+        padding: 15px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        margin-bottom: 15px;
+    }
+    .leyenda {
+        position: absolute;
+        bottom: 30px;
+        right: 10px;
+        background: white;
+        padding: 10px;
+        border-radius: 5px;
+        z-index: 1000;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    }
+    .leyenda-item {
+        display: flex;
+        align-items: center;
+        margin: 5px 0;
+    }
+    .leyenda-color {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        margin-right: 8px;
+    }
+    .marker-incidencia { background: #e74c3c; }
+    .marker-mantenimiento { background: #3498db; }
+    .marker-puesta_marcha { background: #27ae60; }
+    
+    .badge-estado {
+        padding: 3px 8px;
+        border-radius: 3px;
+        font-size: 0.8rem;
+    }
+    .badge-por_asignar { background: #6c757d; color: white; }
+    .badge-asignada { background: #f39c12; color: white; }
+    .badge-resuelta { background: #27ae60; color: white; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">Mapa de Tareas</h2>
+    
+    <div class="filtros-mapa">
+        <div class="row">
+            <div class="col-md-3">
+                <label class="form-label">Tipo de Tarea</label>
+                <select class="form-select" id="filtro-tipo">
+                    <option value="todos">Todos los tipos</option>
+                    <option value="incidencia">Incidencia</option>
+                    <option value="mantenimiento">Mantenimiento</option>
+                    <option value="puesta_marcha">Puesta en Marcha</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Estado</label>
+                <select class="form-select" id="filtro-estado">
+                    <option value="todos">Todos los estados</option>
+                    <option value="por_asignar">Por asignar</option>
+                    <option value="asignada">Asignada</option>
+                    <option value="resuelta">Resuelta</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Técnico</label>
+                <select class="form-select" id="filtro-tecnico">
+                    <option value="todos">Todos los técnicos</option>
+                    <option value="Juan García">Juan García</option>
+                    <option value="María López">María López</option>
+                    <option value="Pedro Sánchez">Pedro Sánchez</option>
+                </select>
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <button class="btn btn-primary w-100" onclick="aplicarFiltros()">
+                    <i class="bi bi-funnel"></i> Aplicar Filtros
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="position-relative">
+        <div id="map"></div>
+        
+        <div class="leyenda">
+            <h6 class="mb-2">Leyenda</h6>
+            <div class="leyenda-item">
+                <div class="leyenda-color marker-incidencia"></div>
+                <span>Incidencia</span>
+            </div>
+            <div class="leyenda-item">
+                <div class="leyenda-color marker-mantenimiento"></div>
+                <span>Mantenimiento</span>
+            </div>
+            <div class="leyenda-item">
+                <div class="leyenda-color marker-puesta_marcha"></div>
+                <span>Puesta en Marcha</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="mt-3">
+        <span class="badge bg-secondary me-2">Total: <span id="total-tareas">0</span></span>
+        <span class="badge bg-danger me-2">Incidencias: <span id="total-incidencias">0</span></span>
+        <span class="badge bg-primary me-2">Mantenimientos: <span id="total-mantenimientos">0</span></span>
+        <span class="badge bg-success me-2">Puestas en Marcha: <span id="total-puestas">0</span></span>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    let map;
+    let markers = [];
+    let tareasData = [];
+    
+    function getColorByTipo(tipo) {
+        const colors = {
+            'incidencia': '#e74c3c',
+            'mantenimiento': '#3498db',
+            'puesta_marcha': '#27ae60'
+        };
+        return colors[tipo] || '#95a5a6';
+    }
+    
+    function getLabelByTipo(tipo) {
+        const labels = {
+            'incidencia': 'Incidencia',
+            'mantenimiento': 'Mantenimiento',
+            'puesta_marcha': 'Puesta en Marcha'
+        };
+        return labels[tipo] || tipo;
+    }
+    
+    function getLabelByEstado(estado) {
+        const labels = {
+            'por_asignar': 'Por asignar',
+            'asignada': 'Asignada',
+            'resuelta': 'Resuelta'
+        };
+        return labels[estado] || estado;
+    }
+    
+    function initMap() {
+        map = L.map('map').setView([40.0, -4.0], 5);
+        
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+        
+        loadTareas();
+    }
+    
+    function loadTareas() {
+        fetch('/api/tareas-mapa')
+            .then(response => response.json())
+            .then(data => {
+                tareasData = data.tareas;
+                renderMarkers(tareasData);
+                updateStats(tareasData);
+            });
+    }
+    
+    function aplicarFiltros() {
+        const tipo = document.getElementById('filtro-tipo').value;
+        const estado = document.getElementById('filtro-estado').value;
+        const tecnico = document.getElementById('filtro-tecnico').value;
+        
+        fetch(`/api/tareas-mapa?tipo=${tipo}&estado=${estado}&tecnico=${tecnico}`)
+            .then(response => response.json())
+            .then(data => {
+                renderMarkers(data.tareas);
+                updateStats(data.tareas);
+            });
+    }
+    
+    function renderMarkers(tareas) {
+        markers.forEach(m => map.removeLayer(m));
+        markers = [];
+        
+        tareas.forEach(tarea => {
+            const color = getColorByTipo(tarea.tipo);
+            
+            const marker = L.circleMarker([tarea.lat, tarea.lng], {
+                radius: 12,
+                fillColor: color,
+                color: '#fff',
+                weight: 2,
+                opacity: 1,
+                fillOpacity: 0.9
+            }).addTo(map);
+            
+            const estadoBadge = `<span class="badge-estado badge-${tarea.estado}">${getLabelByEstado(tarea.estado)}</span>`;
+            const tecnicoInfo = tarea.tecnico ? `<br><strong>Técnico:</strong> ${tarea.tecnico}` : '<br><em>Sin asignar</em>';
+            
+            marker.bindPopup(`
+                <div style="min-width: 200px;">
+                    <h6 style="color: ${color}; margin-bottom: 10px;">
+                        <i class="bi bi-geo-alt-fill"></i> ${getLabelByTipo(tarea.tipo)}
+                    </h6>
+                    <p style="margin: 5px 0;"><strong>ID:</strong> #${tarea.id}</p>
+                    <p style="margin: 5px 0;"><strong>Cliente:</strong> ${tarea.cliente}</p>
+                    <p style="margin: 5px 0;"><strong>Dirección:</strong> ${tarea.direccion}</p>
+                    <p style="margin: 5px 0;"><strong>Estado:</strong> ${estadoBadge}</p>
+                    ${tecnicoInfo}
+                </div>
+            `);
+            
+            markers.push(marker);
+        });
+    }
+    
+    function updateStats(tareas) {
+        document.getElementById('total-tareas').textContent = tareas.length;
+        document.getElementById('total-incidencias').textContent = tareas.filter(t => t.tipo === 'incidencia').length;
+        document.getElementById('total-mantenimientos').textContent = tareas.filter(t => t.tipo === 'mantenimiento').length;
+        document.getElementById('total-puestas').textContent = tareas.filter(t => t.tipo === 'puesta_marcha').length;
+    }
+    
+    document.addEventListener('DOMContentLoaded', initMap);
+</script>
+{% endblock %}
