@@ -1,6 +1,18 @@
 version: "3.9"
 
 services:
+  postgres:
+    image: postgis/postgis:16-3.4
+    environment:
+      POSTGRES_DB: smartmobility
+      POSTGRES_USER: smartmobility
+      POSTGRES_PASSWORD: smartmobility
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/postgres/init:/docker-entrypoint-initdb.d
+
   backend-api:
     build:
       context: ./backend/api
@@ -11,6 +23,8 @@ services:
       - .env
     volumes:
       - ./backend/api:/app
+    depends_on:
+      - postgres
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
   manager-web:
@@ -29,3 +43,6 @@ services:
     command: npm run dev -- --host 0.0.0.0 --port 5173
 
 # La app Flutter no se ejecuta dentro de docker-compose en esta fase.
+
+volumes:
+  postgres_data:
