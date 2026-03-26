@@ -5,28 +5,28 @@
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="{{ url_for('riesgos.lista_riesgos') }}">Riesgos SLA</a></li>
-            <li class="breadcrumb-item active">Detalle #001</li>
+            <li class="breadcrumb-item active">{{ risk.task.id }}</li>
         </ol>
     </nav>
 
     <div class="row">
         <div class="col-lg-8">
             <div class="card mb-4">
-                <div class="card-header bg-danger text-white">
-                    <h5 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Riesgo Crítico - Incidencia #001</h5>
+                <div class="card-header bg-{{ risk.severity_badge }} text-white">
+                    <h5 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Riesgo {{ risk.severity_label }} - {{ risk.task.id }}</h5>
                 </div>
                 <div class="card-body">
                     <h6 class="text-muted mb-3">DATOS DE LA TAREA</h6>
                     <div class="row mb-3">
                         <div class="col-md-6">
-                            <p class="mb-1"><strong>Cliente:</strong> ElektroPlus S.L.</p>
-                            <p class="mb-1"><strong>Tipo:</strong> Incidencia Crítica</p>
-                            <p class="mb-1"><strong>Dirección:</strong> C/ Major, 23, 43001</p>
+                            <p class="mb-1"><strong>Cliente:</strong> {{ risk.task.client }}</p>
+                            <p class="mb-1"><strong>Tipo:</strong> {{ risk.task.type_label }}</p>
+                            <p class="mb-1"><strong>Dirección:</strong> {{ risk.task.address }}</p>
                         </div>
                         <div class="col-md-6">
-                            <p class="mb-1"><strong>Zona:</strong> Centro</p>
-                            <p class="mb-1"><strong>Creada:</strong> hace 3 horas</p>
-                            <p class="mb-1"><strong>Tipo Cliente:</strong> Premium</p>
+                            <p class="mb-1"><strong>Zona:</strong> {{ risk.task.zone }}</p>
+                            <p class="mb-1"><strong>Tiempo transcurrido:</strong> {{ risk.elapsed_label }}</p>
+                            <p class="mb-1"><strong>Prioridad:</strong> {{ risk.task.priority_label }}</p>
                         </div>
                     </div>
                     
@@ -35,19 +35,19 @@
                     <h6 class="text-muted mb-3">SLA</h6>
                     <div class="row">
                         <div class="col-md-6">
-                            <div class="alert alert-danger mb-0">
+                            <div class="alert alert-{{ risk.severity_badge }} mb-0">
                                 <strong>Respuesta</strong><br>
-                                SLA: 4h (Premium + Crítica x0.5)<br>
-                                Transcurrido: 3h<br>
-                                <strong class="text-danger">Queda 1h - CRÍTICO</strong>
+                                SLA: {{ risk.response_sla_label }}<br>
+                                Transcurrido: {{ risk.elapsed_label }}<br>
+                                <strong class="text-{{ risk.severity_badge }}">{{ risk.remaining_label }}</strong>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="alert alert-warning mb-0">
                                 <strong>Resolución</strong><br>
-                                SLA: 12h (Premium + Crítica x0.5)<br>
-                                Transcurrido: 3h<br>
-                                <strong class="text-warning">Queda 9h</strong>
+                                Estado visita: {{ risk.task.status_label }}<br>
+                                Estado incidencia: {{ risk.task.incidence_status_label }}<br>
+                                <strong class="text-warning">Programada: {{ risk.task.planned_date_label }}</strong>
                             </div>
                         </div>
                     </div>
@@ -62,15 +62,15 @@
                 </div>
                 <div class="card-body">
                     <div class="d-grid gap-2">
-                        <a href="{{ url_for('tareas.detalle_tarea', tarea_id=1) }}" class="btn btn-danger">
+                        <a href="{{ url_for('tareas.detalle_tarea', tarea_id=risk.task.id) }}" class="btn btn-{{ risk.severity_badge }}">
                             <i class="bi bi-arrow-right-circle"></i> Asignar Ahora
                         </a>
-                        <button class="btn btn-outline-secondary">
-                            <i class="bi bi-bell"></i> Recordar en 15min
-                        </button>
-                        <button class="btn btn-outline-secondary">
-                            <i class="bi bi-x-circle"></i> Descartar Riesgo
-                        </button>
+                        <a class="btn btn-outline-secondary" href="{{ url_for('mapa.vista_mapa') }}">
+                            <i class="bi bi-map"></i> Ver ubicacion
+                        </a>
+                        <a class="btn btn-outline-secondary" href="{{ url_for('riesgos.lista_riesgos') }}">
+                            <i class="bi bi-arrow-left"></i> Volver al listado
+                        </a>
                     </div>
                 </div>
             </div>

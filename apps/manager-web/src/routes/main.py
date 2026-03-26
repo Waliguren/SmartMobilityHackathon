@@ -1,5 +1,6 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask import Blueprint, render_template
 from flask_login import login_required, current_user
+from src.data_store import build_dashboard_context, list_zone_loads
 
 main = Blueprint('main', __name__)
 
@@ -7,9 +8,12 @@ main = Blueprint('main', __name__)
 @main.route('/dashboard')
 @login_required
 def dashboard():
-    return render_template('dashboard.html', title='Dashboard')
+    context = build_dashboard_context()
+    return render_template('dashboard.html', title='Dashboard', **context)
 
 @main.route('/panel')
 @login_required
 def panel():
-    return render_template('panel.html', title='Panel Principal')
+    context = build_dashboard_context()
+    zone_loads = list_zone_loads()
+    return render_template('panel.html', title='Panel Principal', zone_loads=zone_loads, **context)

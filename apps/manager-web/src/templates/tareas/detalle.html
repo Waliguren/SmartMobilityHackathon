@@ -5,7 +5,7 @@
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="{{ url_for('tareas.lista_tareas') }}">Tareas</a></li>
-            <li class="breadcrumb-item active">Detalle #001</li>
+            <li class="breadcrumb-item active">Detalle {{ task.id }}</li>
         </ol>
     </nav>
 
@@ -13,27 +13,29 @@
         <div class="col-lg-8">
             <div class="card mb-4">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Tarea #001 - Incidencia</h5>
-                    <span class="badge bg-danger">Urgente</span>
+                    <h5 class="mb-0">Tarea {{ task.id }} - {{ task.type_label }}</h5>
+                    <span class="badge bg-{{ task.priority_badge }}">{{ task.priority_label }}</span>
                 </div>
                 <div class="card-body">
                     <h6 class="text-muted mb-3">DATOS GENERALES</h6>
                     <div class="row mb-3">
                         <div class="col-md-6">
-                            <p class="mb-1"><strong>Tipo:</strong> Incidencia</p>
-                            <p class="mb-1"><strong>Tipo de Visita:</strong> Correctivo</p>
-                            <p class="mb-1"><strong>Estado:</strong> Pendiente de asignación</p>
+                            <p class="mb-1"><strong>Tipo:</strong> {{ task.type_label }}</p>
+                            <p class="mb-1"><strong>Tipo de Visita:</strong> {{ task.visit_type_label }}</p>
+                            <p class="mb-1"><strong>Estado:</strong> <span class="badge bg-{{ task.status_badge }}">{{ task.status_label }}</span></p>
                         </div>
                         <div class="col-md-6">
-                            <p class="mb-1"><strong>Origen:</strong> Automático (sistema)</p>
-                            <p class="mb-1"><strong>Cliente:</strong> ElektroPlus S.L.</p>
-                            <p class="mb-1"><strong>Cargador:</strong> CA-001</p>
+                            <p class="mb-1"><strong>Contrato:</strong> {{ task.contract_type }}</p>
+                            <p class="mb-1"><strong>Cliente:</strong> {{ task.client }}</p>
+                            <p class="mb-1"><strong>Cargador:</strong> {{ task.charger_id }}</p>
                         </div>
                     </div>
                     <hr>
                     <h6 class="text-muted mb-3">UBICACIÓN</h6>
-                    <p class="mb-1"><strong>Dirección:</strong> C/ Major, 23, 43001</p>
-                    <p class="mb-1"><strong>Zona:</strong> Centro</p>
+                    <p class="mb-1"><strong>Dirección:</strong> {{ task.address }}</p>
+                    <p class="mb-1"><strong>Zona:</strong> {{ task.zone }}</p>
+                    <p class="mb-1"><strong>Planificada:</strong> {{ task.planned_date_label }}</p>
+                    <p class="mb-0"><strong>Descripcion:</strong> {{ task.description }}</p>
                 </div>
             </div>
 
@@ -44,22 +46,34 @@
                 <div class="card-body">
                     <div class="alert alert-info">
                         <h6><i class="bi bi-info-circle"></i> Prioridad Recomendada</h6>
-                        <p class="mb-0"><strong>URGENTE (82/100)</strong></p>
-                        <p class="mb-1 text-muted">Razón: Incidencia crítica + cliente premium + riesgo SLA</p>
+                        <p class="mb-0"><strong>{{ task.priority_label|upper }} ({{ priority_score }}/100)</strong></p>
+                        <p class="mb-1 text-muted">Razon: prioridad {{ task.priority_label|lower }}, estado {{ task.incidence_status_label|lower }} y visita {{ task.status_label|lower }}.</p>
                     </div>
                     <div class="alert alert-success">
                         <h6><i class="bi bi-person-check"></i> Técnico Recomendado</h6>
-                        <p class="mb-0"><strong>Juan García (92/100)</strong></p>
-                        <p class="mb-1 text-muted">Razón: Zona centro + menor carga + disponible</p>
+                        {% if recommended_technician %}
+                        <p class="mb-0"><strong>{{ recommended_technician.name }} ({{ recommended_technician.expertise * 10 }}/100)</strong></p>
+                        <p class="mb-1 text-muted">Razon: cobertura en {{ recommended_technician.zone }} y experiencia {{ recommended_technician.expertise }}/10.</p>
+                        {% else %}
+                        <p class="mb-0"><strong>Sin recomendacion</strong></p>
+                        <p class="mb-1 text-muted">No hay tecnicos disponibles cargados en la base de datos.</p>
+                        {% endif %}
                     </div>
+                    {% if task.report %}
+                    <div class="alert alert-secondary mb-0">
+                        <h6><i class="bi bi-file-text"></i> Ultimo reporte</h6>
+                        <p class="mb-1"><strong>{{ task.report.type }}</strong> · <span class="badge bg-{{ task.report.status_badge }}">{{ task.report.status }}</span></p>
+                        <p class="mb-0 text-muted">{{ task.report.observations }}</p>
+                    </div>
+                    {% endif %}
                 </div>
                 <div class="card-footer">
-                    <button class="btn btn-primary">
-                        <i class="bi bi-check-lg"></i> Aceptar Recomendaciones
-                    </button>
-                    <button class="btn btn-outline-secondary">
-                        <i class="bi bi-pencil"></i> Modificar
-                    </button>
+                    <a class="btn btn-primary" href="{{ url_for('mapa.vista_mapa') }}">
+                        <i class="bi bi-map"></i> Ver en mapa
+                    </a>
+                    <a class="btn btn-outline-secondary" href="{{ url_for('tecnicos.lista_tecnicos') }}">
+                        <i class="bi bi-people"></i> Ver tecnicos
+                    </a>
                 </div>
             </div>
         </div>
@@ -72,33 +86,33 @@
                 <div class="card-body">
                     <div class="mb-3">
                         <label class="form-label">Prioridad</label>
-                        <select class="form-select">
-                            <option value="urgente" selected>Urgente</option>
-                            <option value="normal">Normal</option>
-                            <option value="baja">Baja</option>
+                        <select class="form-select" disabled>
+                            <option selected>{{ task.priority_label }}</option>
                         </select>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Técnico Asignado</label>
-                        <select class="form-select">
+                        <select class="form-select" disabled>
                             <option value="">Seleccionar...</option>
-                            <option value="1">Juan García - Centro</option>
-                            <option value="2">María López - Norte</option>
-                            <option value="3">Pedro Sánchez - Sur</option>
+                            {% for technician in technicians %}
+                            <option value="{{ technician.id }}" {% if task.technician_id == technician.id %}selected{% endif %}>
+                                {{ technician.name }} - {{ technician.zone }}
+                            </option>
+                            {% endfor %}
                         </select>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Fecha Asignación</label>
-                        <input type="date" class="form-control" value="2026-03-26">
+                        <input type="text" class="form-control" value="{{ task.planned_date_label }}" disabled>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Notas</label>
-                        <textarea class="form-control" rows="3" placeholder="Notas adicionales..."></textarea>
+                        <label class="form-label">Estado de incidencia</label>
+                        <input type="text" class="form-control" value="{{ task.incidence_status_label }}" disabled>
                     </div>
                     <div class="d-grid">
-                        <button class="btn btn-success btn-lg">
-                            <i class="bi bi-check2-all"></i> Guardar y Asignar
-                        </button>
+                        <a class="btn btn-success btn-lg" href="{{ url_for('riesgos.lista_riesgos') }}">
+                            <i class="bi bi-check2-all"></i> Revisar SLA
+                        </a>
                     </div>
                 </div>
             </div>

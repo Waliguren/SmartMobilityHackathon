@@ -4,36 +4,11 @@
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>Lista de Técnicos</h2>
-        <button class="btn btn-primary">
-            <i class="bi bi-plus-lg"></i> Añadir Técnico
-        </button>
+        <span class="badge bg-primary">{{ technicians|length }} tecnicos</span>
     </div>
 
     <div class="card">
         <div class="card-body">
-            <div class="row mb-3">
-                <div class="col-md-4">
-                    <input type="text" class="form-control" placeholder="Buscar por nombre...">
-                </div>
-                <div class="col-md-3">
-                    <select class="form-select">
-                        <option value="">Todas las zonas</option>
-                        <option value="centro">Centro</option>
-                        <option value="norte">Norte</option>
-                        <option value="sur">Sur</option>
-                        <option value="este">Este</option>
-                        <option value="oeste">Oeste</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <select class="form-select">
-                        <option value="">Todos los estados</option>
-                        <option value="activo">Activo</option>
-                        <option value="inactivo">Inactivo</option>
-                    </select>
-                </div>
-            </div>
-
             <div class="table-responsive">
                 <table class="table table-hover">
                     <thead>
@@ -47,51 +22,27 @@
                         </tr>
                     </thead>
                     <tbody>
+                        {% for technician in technicians %}
                         <tr>
-                            <td>#001</td>
+                            <td>{{ technician.id }}</td>
                             <td>
                                 <div class="d-flex align-items-center">
-                                    <div class="avatar me-2">JG</div>
-                                    Juan García
+                                    <div class="avatar me-2">{{ technician.initials }}</div>
+                                    {{ technician.name }}
                                 </div>
                             </td>
-                            <td><span class="badge bg-primary">Centro</span></td>
-                            <td>3</td>
-                            <td><span class="badge bg-success">Activo</span></td>
+                            <td><span class="badge bg-primary">{{ technician.zone }}</span></td>
+                            <td>{{ technician.tasks_today }}</td>
+                            <td><span class="badge bg-{{ technician.active_badge }}">{{ technician.active_label }}</span></td>
                             <td>
-                                <a href="{{ url_for('tecnicos.detalle_tecnico', tecnico_id=1) }}" class="btn btn-sm btn-outline-primary">Ver</a>
+                                <a href="{{ url_for('tecnicos.detalle_tecnico', tecnico_id=technician.id) }}" class="btn btn-sm btn-outline-primary">Ver</a>
                             </td>
                         </tr>
+                        {% else %}
                         <tr>
-                            <td>#002</td>
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    <div class="avatar me-2">ML</div>
-                                    María López
-                                </div>
-                            </td>
-                            <td><span class="badge bg-info">Norte</span></td>
-                            <td>1</td>
-                            <td><span class="badge bg-success">Activo</span></td>
-                            <td>
-                                <a href="{{ url_for('tecnicos.detalle_tecnico', tecnico_id=2) }}" class="btn btn-sm btn-outline-primary">Ver</a>
-                            </td>
+                            <td colspan="6" class="text-center text-muted py-4">No hay tecnicos cargados en SQLite.</td>
                         </tr>
-                        <tr>
-                            <td>#003</td>
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    <div class="avatar me-2">PS</div>
-                                    Pedro Sánchez
-                                </div>
-                            </td>
-                            <td><span class="badge bg-warning">Sur</span></td>
-                            <td>2</td>
-                            <td><span class="badge bg-success">Activo</span></td>
-                            <td>
-                                <a href="{{ url_for('tecnicos.detalle_tecnico', tecnico_id=3) }}" class="btn btn-sm btn-outline-primary">Ver</a>
-                            </td>
-                        </tr>
+                        {% endfor %}
                     </tbody>
                 </table>
             </div>

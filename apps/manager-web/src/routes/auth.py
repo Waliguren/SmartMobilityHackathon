@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_user, logout_user, login_required, current_user
-from src import db
+from src import bcrypt, db
 from src.models.user import User
 
 auth = Blueprint('auth', __name__)
@@ -13,19 +13,10 @@ def login():
     if request.method == 'POST':
         email = request.form.get('email')
         password = request.form.get('password')
-        
-        # Hardcoded login for testing (no DB needed)
-        if email == 'admin@smartmobility.com' and password == 'admin123':
-            # Create a simple user object for Flask-Login
-            user = User(
-                id=1,
-                email='admin@smartmobility.com',
-                username='admin',
-                password='admin123',
-                nombre='Admin',
-                apellido='User',
-                role='admin'
-            )
+
+        user = User.query.filter_by(email=email).first()
+
+        if user and bcrypt.check_password_hash(user.password, password):
             login_user(user)
             flash('¡Bienvenido!', 'success')
             return redirect(url_for('main.dashboard'))
@@ -69,7 +60,8 @@ def register():
             db.session.commit()
             flash('Cuenta creada correctamente. Ya puedes iniciar sesión.', 'success')
             return redirect(url_for('auth.login'))
-        except:
+        except Exception:
+            db.session.rollback()
             flash('Error: El email o username ya existen', 'danger')
     
     return render_template('auth/register.html', title='Registrarse')

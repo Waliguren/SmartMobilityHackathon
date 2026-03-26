@@ -9,7 +9,7 @@
             <div class="card bg-primary text-white">
                 <div class="card-body">
                     <h5 class="card-title"><i class="bi bi-clipboard-check"></i> Tareas Pendientes</h5>
-                    <h2 class="mb-0">12</h2>
+                    <h2 class="mb-0">{{ pending_tasks }}</h2>
                 </div>
                 <div class="card-footer bg-transparent border-0">
                     <a href="{{ url_for('tareas.lista_tareas') }}" class="text-white text-decoration-none">Ver todas →</a>
@@ -20,7 +20,7 @@
             <div class="card bg-warning text-dark">
                 <div class="card-body">
                     <h5 class="card-title"><i class="bi bi-exclamation-triangle"></i> Riesgo SLA</h5>
-                    <h2 class="mb-0">3</h2>
+                    <h2 class="mb-0">{{ sla_risks }}</h2>
                 </div>
                 <div class="card-footer bg-transparent border-0">
                     <a href="{{ url_for('riesgos.lista_riesgos') }}" class="text-dark text-decoration-none">Ver riesgos →</a>
@@ -31,7 +31,7 @@
             <div class="card bg-success text-white">
                 <div class="card-body">
                     <h5 class="card-title"><i class="bi bi-people"></i> Técnicos Activos</h5>
-                    <h2 class="mb-0">8</h2>
+                    <h2 class="mb-0">{{ active_technicians }}</h2>
                 </div>
                 <div class="card-footer bg-transparent border-0">
                     <a href="{{ url_for('tecnicos.lista_tecnicos') }}" class="text-white text-decoration-none">Ver técnicos →</a>
@@ -42,10 +42,8 @@
 
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">Tareas Recientes Sin Asignar</h5>
-            <button class="btn btn-primary btn-sm">
-                <i class="bi bi-magic"></i> Optimizar Todas
-            </button>
+            <h5 class="mb-0">Tareas Abiertas Prioritarias</h5>
+            <span class="badge bg-light text-dark">{{ completed_tasks }} completadas</span>
         </div>
         <div class="card-body">
             <div class="table-responsive">
@@ -61,36 +59,22 @@
                         </tr>
                     </thead>
                     <tbody>
+                        {% for task in priority_tasks %}
                         <tr>
-                            <td>#001</td>
-                            <td><span class="badge bg-danger">Incidencia</span></td>
-                            <td>ElektroPlus</td>
-                            <td>Centro</td>
-                            <td><span class="badge bg-danger">Urgente</span></td>
+                            <td>{{ task.id }}</td>
+                            <td><span class="badge bg-danger">{{ task.type_label }}</span></td>
+                            <td>{{ task.client }}</td>
+                            <td>{{ task.zone }}</td>
+                            <td><span class="badge bg-{{ task.priority_badge }}">{{ task.priority_label }}</span></td>
                             <td>
-                                <a href="{{ url_for('tareas.detalle_tarea', tarea_id=1) }}" class="btn btn-sm btn-outline-primary">Asignar</a>
+                                <a href="{{ url_for('tareas.detalle_tarea', tarea_id=task.id) }}" class="btn btn-sm btn-outline-primary">Ver</a>
                             </td>
                         </tr>
+                        {% else %}
                         <tr>
-                            <td>#002</td>
-                            <td><span class="badge bg-info">Mantenimiento</span></td>
-                            <td>CityParking</td>
-                            <td>Norte</td>
-                            <td><span class="badge bg-warning">Normal</span></td>
-                            <td>
-                                <a href="{{ url_for('tareas.detalle_tarea', tarea_id=2) }}" class="btn btn-sm btn-outline-primary">Asignar</a>
-                            </td>
+                            <td colspan="6" class="text-center text-muted py-4">No hay tareas abiertas con prioridad alta.</td>
                         </tr>
-                        <tr>
-                            <td>#003</td>
-                            <td><span class="badge bg-success">Puesta en Marcha</span></td>
-                            <td>Hotel Mar</td>
-                            <td>Sur</td>
-                            <td><span class="badge bg-secondary">Baja</span></td>
-                            <td>
-                                <a href="{{ url_for('tareas.detalle_tarea', tarea_id=3) }}" class="btn btn-sm btn-outline-primary">Asignar</a>
-                            </td>
-                        </tr>
+                        {% endfor %}
                     </tbody>
                 </table>
             </div>

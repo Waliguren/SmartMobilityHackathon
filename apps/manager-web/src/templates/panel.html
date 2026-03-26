@@ -10,7 +10,7 @@
                 <div class="card-body">
                     <a href="{{ url_for('tareas.lista_tareas') }}" class="text-decoration-none">
                         <i class="bi bi-clipboard-data display-4 text-primary"></i>
-                        <h4 class="mt-2">12</h4>
+                        <h4 class="mt-2">{{ pending_tasks }}</h4>
                         <p class="text-muted mb-0">Tareas Pendientes</p>
                     </a>
                 </div>
@@ -21,7 +21,7 @@
                 <div class="card-body">
                     <a href="{{ url_for('riesgos.lista_riesgos') }}" class="text-decoration-none">
                         <i class="bi bi-exclamation-octagon display-4 text-danger"></i>
-                        <h4 class="mt-2">3</h4>
+                        <h4 class="mt-2">{{ sla_risks }}</h4>
                         <p class="text-muted mb-0">Riesgo SLA</p>
                     </a>
                 </div>
@@ -32,7 +32,7 @@
                 <div class="card-body">
                     <a href="{{ url_for('tecnicos.lista_tecnicos') }}" class="text-decoration-none">
                         <i class="bi bi-people display-4 text-success"></i>
-                        <h4 class="mt-2">8</h4>
+                        <h4 class="mt-2">{{ active_technicians }}</h4>
                         <p class="text-muted mb-0">Técnicos Activos</p>
                     </a>
                 </div>
@@ -42,7 +42,7 @@
             <div class="card text-center">
                 <div class="card-body">
                     <i class="bi bi-check-circle display-4 text-info"></i>
-                    <h4 class="mt-2">45</h4>
+                    <h4 class="mt-2">{{ completed_tasks }}</h4>
                     <p class="text-muted mb-0">Completadas Hoy</p>
                 </div>
             </div>
@@ -56,18 +56,17 @@
                     <h5 class="mb-0">Tareas Críticas</h5>
                 </div>
                 <ul class="list-group list-group-flush">
+                    {% for task in priority_tasks %}
                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span><i class="bi bi-exclamation-circle text-danger"></i> Incidencia #001 - C/Major</span>
-                        <span class="badge bg-danger">Urgente</span>
+                        <span>
+                            <i class="bi bi-exclamation-circle text-danger"></i>
+                            <a class="text-decoration-none" href="{{ url_for('tareas.detalle_tarea', tarea_id=task.id) }}">{{ task.id }} - {{ task.address }}</a>
+                        </span>
+                        <span class="badge bg-{{ task.priority_badge }}">{{ task.priority_label }}</span>
                     </li>
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span><i class="bi bi-exclamation-circle text-danger"></i> Incidencia #005 - Av. Ports</span>
-                        <span class="badge bg-danger">Urgente</span>
-                    </li>
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span><i class="bi bi-exclamation-circle text-warning"></i> Incidencia #008 - C/ Eglesia</span>
-                        <span class="badge bg-warning">Normal</span>
-                    </li>
+                    {% else %}
+                    <li class="list-group-item text-muted">No hay tareas criticas ahora mismo.</li>
+                    {% endfor %}
                 </ul>
             </div>
         </div>
@@ -77,42 +76,19 @@
                     <h5 class="mb-0">Técnicos por Zona</h5>
                 </div>
                 <div class="card-body">
-                    <div class="mb-3">
+                    {% for zone in zone_loads %}
+                    <div class="{% if not loop.last %}mb-3{% else %}mb-0{% endif %}">
                         <div class="d-flex justify-content-between mb-1">
-                            <span>Centro</span>
-                            <span class="badge bg-primary">3 activos</span>
+                            <span>{{ zone.zone }}</span>
+                            <span class="badge bg-primary">{{ zone.count }} activos</span>
                         </div>
                         <div class="progress" style="height: 8px;">
-                            <div class="progress-bar" role="progressbar" style="width: 60%"></div>
+                            <div class="progress-bar" role="progressbar" style="width: {{ zone.width }}%"></div>
                         </div>
                     </div>
-                    <div class="mb-3">
-                        <div class="d-flex justify-content-between mb-1">
-                            <span>Norte</span>
-                            <span class="badge bg-primary">2 activos</span>
-                        </div>
-                        <div class="progress" style="height: 8px;">
-                            <div class="progress-bar" role="progressbar" style="width: 40%"></div>
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <div class="d-flex justify-content-between mb-1">
-                            <span>Sur</span>
-                            <span class="badge bg-primary">2 activos</span>
-                        </div>
-                        <div class="progress" style="height: 8px;">
-                            <div class="progress-bar" role="progressbar" style="width: 40%"></div>
-                        </div>
-                    </div>
-                    <div class="mb-0">
-                        <div class="d-flex justify-content-between mb-1">
-                            <span>Este/Oeste</span>
-                            <span class="badge bg-primary">1 activo</span>
-                        </div>
-                        <div class="progress" style="height: 8px;">
-                            <div class="progress-bar" role="progressbar" style="width: 20%"></div>
-                        </div>
-                    </div>
+                    {% else %}
+                    <p class="text-muted mb-0">No hay tecnicos cargados.</p>
+                    {% endfor %}
                 </div>
             </div>
         </div>

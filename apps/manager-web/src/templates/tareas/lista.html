@@ -7,59 +7,42 @@
     </div>
 
     <div class="card">
-        <div class="card-header">
-            <ul class="nav nav-tabs card-header-tabs" id="tareasTabs" role="tablist">
-                <li class="nav-item">
-                    <button class="nav-link active" id="pendientes-tab" data-bs-toggle="tab" data-bs-target="#pendientes">
-                        Pendientes
-                    </button>
-                </li>
-                <li class="nav-item">
-                    <button class="nav-link" id="asignadas-tab" data-bs-toggle="tab" data-bs-target="#asignadas">
-                        Asignadas
-                    </button>
-                </li>
-                <li class="nav-item">
-                    <button class="nav-link" id="completadas-tab" data-bs-toggle="tab" data-bs-target="#completadas">
-                        Completadas
-                    </button>
-                </li>
-            </ul>
-        </div>
         <div class="card-body">
-            <div class="mb-3">
+            <form class="mb-3" method="GET">
                 <div class="row g-3">
                     <div class="col-md-3">
-                        <select class="form-select">
+                        <select class="form-select" name="tipo">
                             <option value="">Tipo</option>
-                            <option value="incidencia">Incidencia</option>
-                            <option value="mantenimiento">Mantenimiento</option>
-                            <option value="puesta_marcha">Puesta en Marcha</option>
+                            <option value="incidencia" {% if filters.tipo == 'incidencia' %}selected{% endif %}>Incidencia</option>
+                            <option value="mantenimiento" {% if filters.tipo == 'mantenimiento' %}selected{% endif %}>Mantenimiento</option>
+                            <option value="puesta_marcha" {% if filters.tipo == 'puesta_marcha' %}selected{% endif %}>Puesta en marcha</option>
                         </select>
                     </div>
                     <div class="col-md-3">
-                        <select class="form-select">
+                        <select class="form-select" name="zona">
                             <option value="">Zona</option>
-                            <option value="centro">Centro</option>
-                            <option value="norte">Norte</option>
-                            <option value="sur">Sur</option>
-                            <option value="este">Este</option>
-                            <option value="oeste">Oeste</option>
+                            {% for zone in zones %}
+                            <option value="{{ zone }}" {% if filters.zona == zone %}selected{% endif %}>{{ zone }}</option>
+                            {% endfor %}
                         </select>
                     </div>
                     <div class="col-md-3">
-                        <select class="form-select">
+                        <select class="form-select" name="prioridad">
                             <option value="">Prioridad</option>
-                            <option value="urgente">Urgente</option>
-                            <option value="normal">Normal</option>
-                            <option value="baja">Baja</option>
+                            <option value="alta" {% if filters.prioridad == 'alta' %}selected{% endif %}>Alta</option>
+                            <option value="mitja" {% if filters.prioridad == 'mitja' %}selected{% endif %}>Media</option>
+                            <option value="baixa" {% if filters.prioridad == 'baixa' %}selected{% endif %}>Baja</option>
                         </select>
                     </div>
                     <div class="col-md-3">
-                        <input type="text" class="form-control" placeholder="Buscar...">
+                        <input type="text" class="form-control" name="q" placeholder="Buscar..." value="{{ filters.q }}">
+                    </div>
+                    <div class="col-12 d-flex justify-content-end gap-2">
+                        <a class="btn btn-outline-secondary" href="{{ url_for('tareas.lista_tareas') }}">Limpiar</a>
+                        <button class="btn btn-primary" type="submit">Filtrar</button>
                     </div>
                 </div>
-            </div>
+            </form>
 
             <div class="table-responsive">
                 <table class="table table-hover">
@@ -76,62 +59,27 @@
                         </tr>
                     </thead>
                     <tbody>
+                        {% for task in tasks %}
                         <tr>
-                            <td>#001</td>
-                            <td><span class="badge bg-danger">Incidencia</span></td>
-                            <td>ElektroPlus</td>
-                            <td>C/ Major, 23</td>
-                            <td>Centro</td>
-                            <td><span class="badge bg-danger">Urgente</span></td>
-                            <td>-</td>
+                            <td>{{ task.id }}</td>
+                            <td><span class="badge bg-danger">{{ task.type_label }}</span></td>
+                            <td>{{ task.client }}</td>
+                            <td>{{ task.address }}</td>
+                            <td>{{ task.zone }}</td>
+                            <td><span class="badge bg-{{ task.priority_badge }}">{{ task.priority_label }}</span></td>
+                            <td>{{ task.technician_name or '-' }}</td>
                             <td>
-                                <a href="{{ url_for('tareas.detalle_tarea', tarea_id=1) }}" class="btn btn-sm btn-primary">Ver</a>
+                                <a href="{{ url_for('tareas.detalle_tarea', tarea_id=task.id) }}" class="btn btn-sm btn-primary">Ver</a>
                             </td>
                         </tr>
+                        {% else %}
                         <tr>
-                            <td>#002</td>
-                            <td><span class="badge bg-info">Mantenimiento</span></td>
-                            <td>CityParking</td>
-                            <td>Av. Ports, 45</td>
-                            <td>Norte</td>
-                            <td><span class="badge bg-warning">Normal</span></td>
-                            <td>Juan García</td>
-                            <td>
-                                <a href="{{ url_for('tareas.detalle_tarea', tarea_id=2) }}" class="btn btn-sm btn-primary">Ver</a>
-                            </td>
+                            <td colspan="8" class="text-center text-muted py-4">No hay tareas para los filtros seleccionados.</td>
                         </tr>
-                        <tr>
-                            <td>#003</td>
-                            <td><span class="badge bg-success">Puesta Marcha</span></td>
-                            <td>Hotel Mar</td>
-                            <td>C/ Nou, 12</td>
-                            <td>Sur</td>
-                            <td><span class="badge bg-secondary">Baja</span></td>
-                            <td>María López</td>
-                            <td>
-                                <a href="{{ url_for('tareas.detalle_tarea', tarea_id=3) }}" class="btn btn-sm btn-primary">Ver</a>
-                            </td>
-                        </tr>
+                        {% endfor %}
                     </tbody>
                 </table>
             </div>
-
-            <nav>
-                <ul class="pagination justify-content-end">
-                    <li class="page-item disabled">
-                        <span class="page-link">Anterior</span>
-                    </li>
-                    <li class="page-item active">
-                        <span class="page-link">1</span>
-                    </li>
-                    <li class="page-item">
-                        <a class="page-link" href="#">2</a>
-                    </li>
-                    <li class="page-item">
-                        <a class="page-link" href="#">Siguiente</a>
-                    </li>
-                </ul>
-            </nav>
         </div>
     </div>
 </div>
