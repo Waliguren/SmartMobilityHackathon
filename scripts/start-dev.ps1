@@ -6,6 +6,7 @@ param(
 $ErrorActionPreference = "Stop"
 $script:ResolvedDatabaseUrl = $null
 $script:DatabaseModeLabel = "postgres"
+$script:UseDockerForWeb = $false
 
 function Write-Step {
     param([string]$Message)
@@ -119,11 +120,18 @@ function Ensure-WebDependencies {
         [bool]$InstallDependencies
     )
 
-    if (-not (Test-Command -Name "npm")) {
-        throw "No se ha encontrado npm en PATH."
-    }
-
+    $npmAvailable = Test-Command -Name "npm"
+    $dockerAvailable = Test-Command -Name "docker"
     $nodeModulesPath = Join-Path $WebPath "node_modules"
+
+    if (-not $npmAvailable) {
+        if (-not $dockerAvailable) {
+            throw "No se ha encontrado npm en PATH ni Docker disponible. Instala Node.js o Docker."
+        }
+        Write-Warn "npm no encontrado en PATH. Se usara Docker para las dependencias y dev server."
+        $script:UseDockerForWeb = $true
+        return
+    }
 
     if ((-not $InstallDependencies) -and (-not (Test-Path $nodeModulesPath))) {
         Write-Warn "No existe apps\\manager-web\\node_modules. Se ignorara -SkipDependencyInstall para preparar la web."
@@ -286,10 +294,18 @@ if ('$($script:ResolvedDatabaseUrl)' -ne '') { `$env:DATABASE_URL = '$($script:R
 uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 "@
 
-$webCommand = @"
+if ($script:UseDockerForWeb) {
+    $webCommand = @"
+Set-Location '$repoRoot'
+docker compose up manager-web
+"@
+    Write-Step "Docker sera usado para la web (Node.js no esta instalado localmente)"
+} else {
+    $webCommand = @"
 Set-Location '$webPath'
 npm run dev -- --host 0.0.0.0 --port 5173
 "@
+}
 
 Write-Step "Abriendo terminal del backend"
 Start-NewTerminal -ShellExe $shellExe -Title "Smart Mobility Backend" -Command $backendCommand
