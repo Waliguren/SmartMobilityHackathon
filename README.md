@@ -6,8 +6,9 @@ Estado actual:
 
 - Monorepo inicial creado
 - Decisiones técnicas base documentadas
-- Estructura preparada para frontend web de gestores, app móvil de técnicos en Flutter y backend FastAPI con Firebase
-- Sin implementación funcional de negocio todavía
+- Estructura preparada para frontend web de gestores, app móvil de técnicos en Flutter y backend FastAPI
+- Backend reorientado a planificación geográfica semanal sobre PostgreSQL/PostGIS
+- Firebase queda como soporte complementario para auth, storage y sincronización futura
 
 ## Objetivo
 
@@ -15,7 +16,7 @@ Construir una plataforma con tres superficies principales:
 
 - Web de gestores para planificar contratos, incidencias, visitas y revisar reportes
 - App móvil para técnicos/instaladores con agenda, ejecución de visitas y captura de reportes
-- Backend API para autenticación, orquestación operativa y persistencia sobre Firebase
+- Backend API para autenticación, planificación operativa y persistencia transaccional/geográfica
 
 ## Contexto funcional actual
 
@@ -23,19 +24,29 @@ El dominio base parte del ERD incluido en el repositorio:
 
 - `CONTRACT` genera visitas planificadas
 - `INCIDENCE` puede disparar visitas correctivas
-- `TECHNICIAN` recibe asignaciones
+- `TECHNICIAN` recibe asignaciones por zona y carga operativa
 - `VISIT` concentra la operación de campo
 - `REPORT` recoge el resultado de la intervención
+
+El escenario operativo confirmado ahora es más exigente:
+
+- unos 17K cargadores distribuidos por España
+- múltiples incidencias abiertas el mismo día
+- planificación semanal por técnico
+- prioridad combinada por SLA, impacto cliente y urgencia
+- optimización de ruta sobre red viaria
+- integración con OpenChargeMap y Google Cloud Fleet Routing
 
 ## Decisiones iniciales
 
 - `apps/manager-web`: React + Vite + TypeScript
 - `apps/technician-mobile`: Flutter
 - `backend/api`: FastAPI + Uvicorn
-- `backend/firebase`: Firestore, Auth y Storage como base gestionada
-- `docker-compose.yml`: arranque local de web y backend para desarrollo
+- `backend/postgres`: PostgreSQL/PostGIS para operación y optimización
+- `backend/firebase`: Firebase Auth/Storage como complemento
+- `docker-compose.yml`: arranque local de web, backend y PostgreSQL
 
-La elección del stack web queda fijada aquí como punto de partida para no bloquear el scaffolding. Si se decide cambiar de framework, la estructura del monorepo sigue siendo válida.
+La decisión relevante tras la reunión de arquitectura es esta: Firebase no debe ser la base operativa principal para el planificador. Para consultas transaccionales, asignación semanal, ordenación por heurística y trabajo geoespacial, la base correcta es PostgreSQL con extensión PostGIS. Firebase sigue siendo útil, pero no como núcleo de planificación.
 
 ## Estructura
 
@@ -46,7 +57,8 @@ SmartMobilityHackathon/
 │   └── technician-mobile/
 ├── backend/
 │   ├── api/
-│   └── firebase/
+│   ├── firebase/
+│   └── postgres/
 ├── docs/
 ├── .editorconfig
 ├── .env.example
@@ -82,9 +94,13 @@ SmartMobilityHackathon/
 
 - API REST inicial
 - Autenticación por roles
-- Modelado de contratos, incidencias, visitas y reportes
-- Integración con Firebase Admin SDK
-- Reglas de seguridad y estructura inicial de Firestore
+- Modelado de clientes, cargadores, contratos, incidencias, visitas, planes de ruta y reportes
+- Motor de priorización y planificación semanal
+- Soporte para A* sobre grafo viario cargado desde GeoJSON
+- Integración preparada con OpenChargeMap
+- Integración preparada con Google Fleet Routing
+- Base transaccional PostgreSQL/PostGIS
+- Firebase como soporte para auth y ficheros
 
 ## Arranque local
 
@@ -92,6 +108,7 @@ SmartMobilityHackathon/
 
 - Node.js 20+
 - Python 3.12+
+- PostgreSQL 16+ con PostGIS
 - Flutter 3.29+
 - Firebase CLI
 - Docker Desktop opcional
@@ -125,12 +142,22 @@ flutter run
 docker compose up --build
 ```
 
+### Script Windows
+
+Para arrancar en Windows la base de datos, el backend y la web de gestores, sin Flutter:
+
+```powershell
+pwsh -ExecutionPolicy Bypass -File .\scripts\start-dev.ps1
+```
+
 ## Documentación
 
 - `docs/ARCHITECTURE.md`: arquitectura técnica y flujo entre aplicaciones
+- `docs/DATA_MODEL.md`: modelo de datos operativo y criterios de persistencia
+- `docs/PLANNING_ENGINE.md`: diseño del motor de planificación semanal
 - `docs/PRODUCT_SCOPE.md`: alcance funcional inicial y límites del MVP
 - `docs/DEVELOPMENT.md`: convenciones de desarrollo y siguientes pasos
 
 ## Nota
 
-Este commit deja la base del proyecto y la estructura de trabajo. No hay lógica de negocio implementada, ni endpoints de dominio, ni pantallas funcionales.
+Este repositorio ya incluye la primera base del backend y del modelo de datos para el planificador, pero no deja todavía una solución cerrada de producción ni la app móvil funcional.
