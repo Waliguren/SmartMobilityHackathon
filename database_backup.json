@@ -1,0 +1,128 @@
+{
+  "contracts": [
+    {
+      "id": "3mlI7PD70YMK0Kui4R0c",
+      "charger_id": "CHARGER_002",
+      "domain_id": "",
+      "end_date": {
+        "_seconds": 1899825300,
+        "_nanoseconds": 0
+      },
+      "frequency": "",
+      "start_date": {
+        "_seconds": 1774459130,
+        "_nanoseconds": 0
+      },
+      "status": "",
+      "type": "Revisió de punt de carrega",
+      "client_id": "Cliente_2"
+    },
+    {
+      "id": "uEuTiaWiN3T0tiJsaFxv",
+      "type": "Manteniment Or",
+      "start_date": {
+        "_seconds": 1774883292,
+        "_nanoseconds": 0
+      },
+      "end_date": {
+        "_seconds": 1774969726,
+        "_nanoseconds": 0
+      },
+      "frequency": "",
+      "status": "",
+      "domain_id": "",
+      "charger_id": "CHARGER_001",
+      "client_id": "Cliente_1"
+    }
+  ],
+  "incidences": [
+    {
+      "id": "oRvRHWrP9PILcvu4anuC",
+      "created_at": {
+        "_seconds": 1774373292,
+        "_nanoseconds": 0
+      },
+      "priority": "baixa",
+      "status": "oberta",
+      "charger_id": "CHARGER_001",
+      "in_process": false
+    },
+    {
+      "id": "q7a8LJwxkaOs94g2uPKQ",
+      "priority": "alta",
+      "status": "oberta",
+      "created_at": {
+        "_seconds": 1774113299,
+        "_nanoseconds": 0
+      },
+      "charger_id": "CHARGER_002",
+      "in_process": true
+    }
+  ],
+  "reports": [
+    {
+      "id": "rbVFbAMDqEcwD9X7eXBn",
+      "visit_id": "X50SgPDaPTbhENAwfpe6",
+      "report_type": "Reparació de cable",
+      "status": "firmat",
+      "created_at": {
+        "_seconds": 1774628908,
+        "_nanoseconds": 0
+      }
+    }
+  ],
+  "technicians": [
+    {
+      "id": "1GqY3xZQZVFgBAepkiIE",
+      "name": "Marc",
+      "zone": "Tarragona",
+      "expertice": 5
+    },
+    {
+      "id": "pNtarScKH6aQZEz9S7ks",
+      "name": "Joan",
+      "zone": "Valencia",
+      "expertice": 3
+    }
+  ],
+  "visits": [
+    {
+      "id": "4yoTQjFJ7LCtvRbG7sml",
+      "incidence_id": "q7a8LJwxkaOs94g2uPKQ",
+      "estimated_duration": 103.2,
+      "location": {
+        "_latitude": 41.2,
+        "_longitude": 1.3
+      },
+      "status": "pendiente",
+      "planned_date": {
+        "_seconds": 1776358072,
+        "_nanoseconds": 0
+      },
+      "visit_type": "averia",
+      "time_start": {
+        "_seconds": 1774717239,
+        "_nanoseconds": 0
+      },
+      "time_finish": {
+        "_seconds": 1776358760,
+        "_nanoseconds": 0
+      }
+    },
+    {
+      "id": "X50SgPDaPTbhENAwfpe6",
+      "planned_date": {
+        "_seconds": 1774626394,
+        "_nanoseconds": 0
+      },
+      "location": {
+        "_latitude": 41.11,
+        "_longitude": 1.24
+      },
+      "estimated_duration": 60.1,
+      "incidence_id": "oRvRHWrP9PILcvu4anuC",
+      "status": "pendiente",
+      "visit_type": "mantenimiento"
+    }
+  ]
+}
