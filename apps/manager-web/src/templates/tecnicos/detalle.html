@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('tecnicos.lista_tecnicos') }}">Técnicos</a></li>
+            <li class="breadcrumb-item active">Detalle #001</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <div class="col-lg-4">
+            <div class="card mb-4">
+                <div class="card-body text-center">
+                    <div class="avatar-lg mx-auto mb-3">JG</div>
+                    <h4>Juan García</h4>
+                    <p class="text-muted">Técnico de Campo</p>
+                    <span class="badge bg-success mb-3">Activo</span>
+                    <div class="text-start mt-4">
+                        <p><strong>Zona:</strong> Centro</p>
+                        <p><strong>Teléfono:</strong> 612 345 678</p>
+                        <p><strong>Email:</strong> juan.garcia@smartmobility.com</p>
+                        <p><strong>Especialización:</strong> Incidencias Críticas</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Tareas Asignadas Hoy</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Tipo</th>
+                                    <th>Dirección</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>#001</td>
+                                    <td><span class="badge bg-danger">Incidencia</span></td>
+                                    <td>C/ Major, 23</td>
+                                    <td><span class="badge bg-warning">Pendiente</span></td>
+                                </tr>
+                                <tr>
+                                    <td>#004</td>
+                                    <td><span class="badge bg-info">Mantenimiento</span></td>
+                                    <td>Av. Barcelona, 45</td>
+                                    <td><span class="badge bg-warning">Pendiente</span></td>
+                                </tr>
+                                <tr>
+                                    <td>#007</td>
+                                    <td><span class="badge bg-success">Puesta Marcha</span></td>
+                                    <td>C/ Nou, 12</td>
+                                    <td><span class="badge bg-warning">Pendiente</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Estadísticas</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <h3 class="text-primary">45</h3>
+                            <p class="text-muted">Tareas Este Mes</p>
+                        </div>
+                        <div class="col-4">
+                            <h3 class="text-success">98%</h3>
+                            <p class="text-muted">SLA Cumplido</p>
+                        </div>
+                        <div class="col-4">
+                            <h3 class="text-warning">4.2h</h3>
+                            <p class="text-muted">Tiempo Medio</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

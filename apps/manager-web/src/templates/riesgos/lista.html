@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Riesgos SLA</h2>
+        <div class="btn-group">
+            <button class="btn btn-outline-danger active">Todos</button>
+            <button class="btn btn-outline-danger">Críticos</button>
+            <button class="btn btn-outline-warning">Advertencia</button>
+        </div>
+    </div>
+
+    <div class="alert alert-danger" role="alert">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        <strong>3 tareas</strong> en riesgo de incumplir SLA. Requiere atención inmediata.
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-md-1">
+                    <span class="badge bg-danger">CRÍTICO</span>
+                </div>
+                <div class="col-md-5">
+                    <strong>Incidencia #001</strong>
+                    <p class="mb-0 text-muted">ElektroPlus - C/ Major, 23</p>
+                </div>
+                <div class="col-md-3">
+                    <span class="text-danger"><i class="bi bi-clock"></i> Queda 1h de respuesta</span>
+                </div>
+                <div class="col-md-3">
+                    <a href="{{ url_for('tareas.detalle_tarea', tarea_id=1) }}" class="btn btn-sm btn-danger">Ver Tarea</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-md-1">
+                    <span class="badge bg-danger">CRÍTICO</span>
+                </div>
+                <div class="col-md-5">
+                    <strong>Incidencia #005</strong>
+                    <p class="mb-0 text-muted">CityParking - Av. Ports, 45</p>
+                </div>
+                <div class="col-md-3">
+                    <span class="text-danger"><i class="bi bi-clock"></i> Queda 30min de respuesta</span>
+                </div>
+                <div class="col-md-3">
+                    <a href="{{ url_for('tareas.detalle_tarea', tarea_id=5) }}" class="btn btn-sm btn-danger">Ver Tarea</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-md-1">
+                    <span class="badge bg-warning">ADVERTENCIA</span>
+                </div>
+                <div class="col-md-5">
+                    <strong>Incidencia #008</strong>
+                    <p class="mb-0 text-muted">Hotel Mar - C/ Eglesia, 8</p>
+                </div>
+                <div class="col-md-3">
+                    <span class="text-warning"><i class="bi bi-clock"></i> Queda 2h de resolución</span>
+                </div>
+                <div class="col-md-3">
+                    <a href="{{ url_for('tareas.detalle_tarea', tarea_id=8) }}" class="btn btn-sm btn-warning">Ver Tarea</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
