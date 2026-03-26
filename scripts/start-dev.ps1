@@ -4,10 +4,17 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+$script:ResolvedDatabaseUrl = $null
+$script:DatabaseModeLabel = "postgres"
 
 function Write-Step {
     param([string]$Message)
     Write-Host "[smart-mobility] $Message" -ForegroundColor Cyan
+}
+
+function Write-Warn {
+    param([string]$Message)
+    Write-Host "[smart-mobility] $Message" -ForegroundColor Yellow
 }
 
 function Test-Command {
@@ -90,6 +97,10 @@ function Ensure-BackendEnvironment {
     }
 
     if (-not (Test-Path $venvPath)) {
+        if (-not $InstallDependencies) {
+            Write-Warn "No existe backend\\api\\.venv. Se ignorara -SkipDependencyInstall para preparar el backend."
+            $InstallDependencies = $true
+        }
         Write-Step "Creando entorno virtual del backend"
         & python -m venv $venvPath
     }
@@ -112,6 +123,13 @@ function Ensure-WebDependencies {
         throw "No se ha encontrado npm en PATH."
     }
 
+    $nodeModulesPath = Join-Path $WebPath "node_modules"
+
+    if ((-not $InstallDependencies) -and (-not (Test-Path $nodeModulesPath))) {
+        Write-Warn "No existe apps\\manager-web\\node_modules. Se ignorara -SkipDependencyInstall para preparar la web."
+        $InstallDependencies = $true
+    }
+
     if ($InstallDependencies) {
         Write-Step "Instalando dependencias de la web"
         Push-Location $WebPath
@@ -124,6 +142,51 @@ function Ensure-WebDependencies {
     }
 }
 
+function Get-LocalPostgresService {
+    $serviceNames = @("postgresql*", "postgres*", "pgsql*")
+    $services = @(Get-Service -Name $serviceNames -ErrorAction SilentlyContinue)
+    if ($services.Count -gt 0) {
+        return $services[0]
+    }
+
+    return $null
+}
+
+function Ensure-LocalPostgres {
+    $localPostgresAvailable = Test-TcpPort -TargetHost "127.0.0.1" -Port 5432
+    if ($localPostgresAvailable) {
+        Write-Step "Detectado PostgreSQL escuchando en localhost:5432"
+        return $true
+    }
+
+    $service = Get-LocalPostgresService
+    if ($null -eq $service) {
+        return $false
+    }
+
+    if ($service.Status -ne "Running") {
+        Write-Step "Intentando arrancar el servicio local de PostgreSQL: $($service.Name)"
+        Start-Service -Name $service.Name
+    }
+
+    if (Wait-ForPort -TargetHost "127.0.0.1" -Port 5432) {
+        Write-Step "PostgreSQL local arrancado mediante servicio de Windows"
+        return $true
+    }
+
+    return $false
+}
+
+function Get-SqliteDatabaseUrl {
+    param(
+        [string]$RepoRoot
+    )
+
+    $sqlitePath = Join-Path $RepoRoot "backend\api\smartmobility-dev.db"
+    $normalized = $sqlitePath.Replace("\", "/")
+    return "sqlite:///$normalized"
+}
+
 function Start-Postgres {
     param(
         [string]$RepoRoot,
@@ -131,11 +194,19 @@ function Start-Postgres {
     )
 
     $dockerAvailable = Test-Command -Name "docker"
-    $localPostgresAvailable = Test-TcpPort -TargetHost "127.0.0.1" -Port 5432
+    $localPostgresAvailable = Ensure-LocalPostgres
 
     if ($ForceDocker) {
         if (-not $dockerAvailable) {
-            throw "Se ha pedido -UseDockerPostgres pero docker no esta disponible."
+            if ($localPostgresAvailable) {
+                Write-Step "Docker no esta disponible. Se usara PostgreSQL local en su lugar"
+                return
+            }
+
+            $script:ResolvedDatabaseUrl = Get-SqliteDatabaseUrl -RepoRoot $RepoRoot
+            $script:DatabaseModeLabel = "sqlite"
+            Write-Warn "Se ha pedido -UseDockerPostgres pero no hay Docker ni PostgreSQL local. Se usara SQLite solo para desarrollo."
+            return
         }
 
         Write-Step "Arrancando PostgreSQL/PostGIS con docker compose"
@@ -154,7 +225,6 @@ function Start-Postgres {
     }
 
     if ($localPostgresAvailable) {
-        Write-Step "Detectado PostgreSQL escuchando en localhost:5432"
         return
     }
 
@@ -174,7 +244,9 @@ function Start-Postgres {
         return
     }
 
-    throw "No hay PostgreSQL local en 5432 y docker no esta disponible. Inicia PostgreSQL/PostGIS manualmente o instala Docker."
+    $script:ResolvedDatabaseUrl = Get-SqliteDatabaseUrl -RepoRoot $RepoRoot
+    $script:DatabaseModeLabel = "sqlite"
+    Write-Warn "No hay PostgreSQL local ni Docker. Se usara SQLite solo para desarrollo."
 }
 
 function Start-NewTerminal {
@@ -210,6 +282,7 @@ Ensure-WebDependencies -WebPath $webPath -InstallDependencies:$installWebDeps
 $backendCommand = @"
 Set-Location '$backendPath'
 & '$activatePath'
+if ('$($script:ResolvedDatabaseUrl)' -ne '') { `$env:DATABASE_URL = '$($script:ResolvedDatabaseUrl)' }
 uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 "@
 
@@ -230,6 +303,7 @@ Write-Host "  Backend: http://localhost:8000" -ForegroundColor Green
 Write-Host "  Swagger: http://localhost:8000/docs" -ForegroundColor Green
 Write-Host "  Health:  http://localhost:8000/api/v1/health" -ForegroundColor Green
 Write-Host "  Web:     http://localhost:5173" -ForegroundColor Green
+Write-Host "  DB mode: $script:DatabaseModeLabel" -ForegroundColor Green
 Write-Host ""
 Write-Host "Uso recomendado:" -ForegroundColor Yellow
 Write-Host "  pwsh -ExecutionPolicy Bypass -File .\scripts\start-dev.ps1"
