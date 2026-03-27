@@ -109,7 +109,7 @@ class AiAssistantService {
     return AiWeeklyPlan(
       engine: 'deterministic-local-planner',
       summary:
-          'Plan semanal generado de forma determinista priorizando averías, SLA y clientes con contratos de mayor valor${topClients.isNotEmpty ? ' como $topClients' : ''}.',
+          'Plan semanal concentrado en dos días, priorizando averías, SLA y clientes con contratos de mayor valor${topClients.isNotEmpty ? ' como $topClients' : ''}.',
       usedFallback: false,
       preferencesAssumed: const [
         'Martes 12:30 - 14:30 reservado para una comida personal.',
@@ -125,7 +125,7 @@ class AiAssistantService {
   ) {
     final windows = _buildWindows();
     final scheduled = <AiScheduledTask>[];
-    var overflowCursor = DateTime(2026, 1, 9, 15, 0);
+    var overflowCursor = DateTime(2026, 1, 3, 15, 0);
 
     for (final task in tasks) {
       final durationMinutes = task.estimatedMinutes.clamp(45, 180) as int;
@@ -136,7 +136,7 @@ class AiAssistantService {
       late final DateTime end;
 
       if (slot == null) {
-        weekday = 'friday';
+        weekday = 'wednesday';
         start = overflowCursor;
         end = start.add(Duration(minutes: durationMinutes));
         overflowCursor = end.add(const Duration(minutes: 15));
@@ -163,6 +163,22 @@ class AiAssistantService {
       );
     }
 
+    scheduled.add(
+      const AiScheduledTask(
+        visitId: 'calendar-block-tuesday-lunch',
+        title: 'Incompatibilidad del técnico',
+        client: 'Calendario personal',
+        address: 'Comida reservada',
+        contractType: 'Bloqueo',
+        weekday: 'tuesday',
+        startTime: '12:30',
+        endTime: '14:30',
+        priorityScore: 0,
+        reason: 'Franja no disponible y debe respetarse en la planificación.',
+        isBlocked: true,
+      ),
+    );
+
     scheduled.sort(AiScheduledTask.compareByWeekdayAndTime);
     return scheduled;
   }
@@ -172,14 +188,8 @@ class AiAssistantService {
     return const [
       _PlanningWindow('monday', 1, 9, 0, 13, 0),
       _PlanningWindow('monday', 1, 15, 0, 18, 0),
-      _PlanningWindow('tuesday', 2, 9, 0, 12, 30),
-      _PlanningWindow('tuesday', 2, 14, 30, 18, 0),
       _PlanningWindow('wednesday', 3, 9, 0, 13, 0),
       _PlanningWindow('wednesday', 3, 15, 0, 18, 0),
-      _PlanningWindow('thursday', 4, 9, 0, 13, 0),
-      _PlanningWindow('thursday', 4, 15, 0, 16, 0),
-      _PlanningWindow('friday', 5, 9, 0, 13, 0),
-      _PlanningWindow('friday', 5, 15, 0, 18, 0),
     ].map((window) {
       return window.toMutable(baseDate);
     }).toList();

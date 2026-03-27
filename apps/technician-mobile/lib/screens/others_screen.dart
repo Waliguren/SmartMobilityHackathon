@@ -100,7 +100,7 @@ class _AiAssistantScreenState extends State<AiAssistantScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Planificador Semanal IA',
+                    'Planificador IA',
                     style: Theme.of(
                       context,
                     ).textTheme.headlineSmall?.copyWith(
@@ -109,7 +109,7 @@ class _AiAssistantScreenState extends State<AiAssistantScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Genera una agenda de lunes a viernes priorizando tareas críticas, SLA y clientes con contratos más valiosos.',
+                    'Genera una agenda priorizando tareas críticas, SLA y clientes con contratos más valiosos, concentrando la ruta en dos días.',
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
                   const SizedBox(height: 16),
@@ -143,7 +143,7 @@ class _AiAssistantScreenState extends State<AiAssistantScreen> {
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
                           : const Icon(Icons.auto_awesome),
-                      label: const Text('Planificador Semanal IA'),
+                      label: const Text('Planificador IA'),
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
                       ),
@@ -209,8 +209,11 @@ class _AiAssistantScreenState extends State<AiAssistantScreen> {
                           ),
                         ),
                         const Chip(
-                          label: Text('Determinista'),
-                          backgroundColor: Color(0xFFD8F5D0),
+                          label: Text(
+                            'AI-Generated',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                          backgroundColor: Color(0xFF8E5AF7),
                         ),
                       ],
                     ),
@@ -354,19 +357,30 @@ class _TaskPlanTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scoreColor = task.priorityScore >= 85
+    final scoreColor = task.isBlocked
+        ? const Color(0xFF8E5AF7)
+        : task.priorityScore >= 85
         ? Colors.redAccent
         : task.priorityScore >= 70
         ? Colors.orange
         : Colors.green;
+    final cardBackground = task.isBlocked
+        ? const Color(0xFFF3ECFF)
+        : const Color(0xFFF8FAFD);
+    final borderColor = task.isBlocked
+        ? const Color(0xFFD5C2FF)
+        : const Color(0xFFD9E3F0);
+    final timeBackground = task.isBlocked
+        ? const Color(0xFF8E5AF7)
+        : const Color(0xFF1F3C88);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFD),
+        color: cardBackground,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFD9E3F0)),
+        border: Border.all(color: borderColor),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -377,7 +391,7 @@ class _TaskPlanTile extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1F3C88),
+                  color: timeBackground,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
@@ -407,7 +421,7 @@ class _TaskPlanTile extends StatelessWidget {
               ),
               Chip(
                 label: Text(
-                  task.priorityScore.toStringAsFixed(0),
+                  task.isBlocked ? 'Bloqueado' : task.priorityScore.toStringAsFixed(0),
                   style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,

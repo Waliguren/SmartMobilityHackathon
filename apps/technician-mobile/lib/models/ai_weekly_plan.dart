@@ -48,6 +48,7 @@ class AiScheduledTask {
   final String endTime;
   final double priorityScore;
   final String reason;
+  final bool isBlocked;
 
   const AiScheduledTask({
     required this.visitId,
@@ -60,6 +61,7 @@ class AiScheduledTask {
     required this.endTime,
     required this.priorityScore,
     required this.reason,
+    this.isBlocked = false,
   });
 
   factory AiScheduledTask.fromJson(Map<String, dynamic> json) {
@@ -74,6 +76,7 @@ class AiScheduledTask {
       endTime: (json['end_time'] ?? '').toString(),
       priorityScore: _parseDouble(json['priority_score']),
       reason: (json['reason'] ?? '').toString(),
+      isBlocked: json['is_blocked'] == true,
     );
   }
 
