@@ -8,18 +8,19 @@
 
     <div class="card">
         <div class="card-body">
-            <div class="mb-3">
+            <form class="mb-3" method="GET">
                 <div class="row g-3">
                     <div class="col-md-3">
-                        <select class="form-select">
+                        <select class="form-select" name="tipo">
                             <option value="">Tipo</option>
                             <option value="avaria">Incidencia</option>
                             <option value="manteniment">Mantenimiento</option>
                             <option value="preventiu">Preventivo</option>
+
                         </select>
                     </div>
                     <div class="col-md-3">
-                        <select class="form-select">
+                        <select class="form-select" name="zona">
                             <option value="">Zona</option>
                             <option value="Tarragona">Tarragona</option>
                             <option value="Reus">Reus</option>
@@ -34,13 +35,18 @@
                             <option value="pendent">Pendiente</option>
                             <option value="en_proces">En proceso</option>
                             <option value="completada">Completada</option>
+
                         </select>
                     </div>
                     <div class="col-md-3">
-                        <input type="text" class="form-control" placeholder="Buscar...">
+                        <input type="text" class="form-control" name="q" placeholder="Buscar..." value="{{ filters.q }}">
+                    </div>
+                    <div class="col-12 d-flex justify-content-end gap-2">
+                        <a class="btn btn-outline-secondary" href="{{ url_for('tareas.lista_tareas') }}">Limpiar</a>
+                        <button class="btn btn-primary" type="submit">Filtrar</button>
                     </div>
                 </div>
-            </div>
+            </form>
 
             <div class="table-responsive">
                 <table class="table table-hover">

@@ -79,9 +79,9 @@
                 <label class="form-label">Técnico</label>
                 <select class="form-select" id="filtro-tecnico">
                     <option value="todos">Todos los técnicos</option>
-                    <option value="Juan García">Juan García</option>
-                    <option value="María López">María López</option>
-                    <option value="Pedro Sánchez">Pedro Sánchez</option>
+                    {% for technician in technicians %}
+                    <option value="{{ technician.name }}">{{ technician.name }}</option>
+                    {% endfor %}
                 </select>
             </div>
             <div class="col-md-3 d-flex align-items-end">

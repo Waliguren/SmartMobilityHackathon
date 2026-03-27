@@ -2,12 +2,14 @@ from flask import Blueprint, render_template
 from flask_login import login_required
 from src.services.firebase_service import get_visits, get_technicians, get_incidents
 
+
 main = Blueprint('main', __name__)
 
 @main.route('/')
 @main.route('/dashboard')
 @login_required
 def dashboard():
+
     visits = get_visits()
     technicians = get_technicians()
     incidents = get_incidents()

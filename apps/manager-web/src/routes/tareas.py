@@ -1,12 +1,15 @@
+
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_required, current_user
 from src.services.firebase_service import get_visits, get_incidents, get_contracts
+
 
 tareas = Blueprint('tareas', __name__)
 
 @tareas.route('/tareas')
 @login_required
 def lista_tareas():
+
     visits = get_visits()
     incidents = get_incidents()
     contracts = get_contracts()
@@ -73,3 +76,4 @@ def detalle_tarea(tarea_id):
         }.get(task.get('status', ''), task.get('status', ''))
     
     return render_template('tareas/detalle.html', title='Detalle Tarea', tarea_id=tarea_id, task=task)
+

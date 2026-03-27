@@ -21,6 +21,7 @@
                 <div class="card-body">
                     <h5 class="card-title"><i class="bi bi-exclamation-triangle"></i> Riesgo SLA</h5>
                     <h2 class="mb-0">{{ riesgos_sla }}</h2>
+
                 </div>
                 <div class="card-footer bg-transparent border-0">
                     <a href="{{ url_for('riesgos.lista_riesgos') }}" class="text-dark text-decoration-none">Ver riesgos →</a>
@@ -31,7 +32,9 @@
             <div class="card bg-success text-white">
                 <div class="card-body">
                     <h5 class="card-title"><i class="bi bi-people"></i> Técnicos Activos</h5>
+
                     <h2 class="mb-0">{{ tecnicos_activos }}</h2>
+
                 </div>
                 <div class="card-footer bg-transparent border-0">
                     <a href="{{ url_for('tecnicos.lista_tecnicos') }}" class="text-white text-decoration-none">Ver técnicos →</a>
@@ -39,6 +42,7 @@
             </div>
         </div>
     </div>
+
 
     <div class="card border-primary mb-4">
         <div class="card-body text-center py-5">
@@ -48,6 +52,7 @@
             <a href="{{ url_for('asignacion.vista_asignacion') }}" class="btn btn-primary btn-lg mt-2">
                 <i class="bi bi-magic"></i> Ir a Asignación
             </a>
+
         </div>
     </div>
 </div>
