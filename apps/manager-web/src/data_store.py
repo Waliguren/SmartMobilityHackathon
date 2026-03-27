@@ -5,6 +5,7 @@ from pathlib import Path
 from src import bcrypt, db
 from src.models.operations import Contract, Incidence, Report, Technician, Visit
 from src.models.user import User
+from src.services.firebase_service import get_visits as get_firebase_visits
 
 TYPE_LABELS = {
     "avaria": "Incidencia",
@@ -308,6 +309,44 @@ def list_map_tasks(tipo_filter="todos", estado_filter="todos", tecnico_filter="t
 
         if map_task["lat"] is None or map_task["lng"] is None:
             continue
+        tasks.append(map_task)
+
+    firebase_visits = get_firebase_visits()
+    existing_ids = {t["id"] for t in tasks}
+    
+    for v in firebase_visits:
+        if v.get('id') in existing_ids:
+            continue
+        
+        lat = v.get('location', {}).get('_latitude')
+        lng = v.get('location', {}).get('_longitude')
+        
+        if lat is None or lng is None:
+            continue
+        
+        tech_id = v.get('technician_id')
+        status = v.get('status')
+        
+        if status == 'completada':
+            estado = 'resuelta'
+        elif tech_id:
+            estado = 'asignada'
+        else:
+            estado = 'por_asignar'
+        
+        tipo = v.get('visit_type', 'manteniment')
+        tipo_key = TYPE_KEYS.get(tipo, tipo)
+        
+        map_task = {
+            "id": v.get('id'),
+            "tipo": tipo_key,
+            "lat": lat,
+            "lng": lng,
+            "direccion": v.get('address', ''),
+            "estado": estado,
+            "tecnico": None,
+            "cliente": v.get('cliente', ''),
+        }
         tasks.append(map_task)
 
     if tipo_filter != "todos":

@@ -707,21 +707,19 @@
                 alert(`¡Éxito! Se aplicaron ${cambiosPendientes.length} asignaciones`);
                 cambiosPendientes = [];
                 tareasProcesadas = [];
+                actualizarBotonAplicar();
                 cargarDatos();
             } else {
                 alert('Error al aplicar cambios: ' + (data.error || 'Error desconocido'));
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-check2-all"></i> Aplicar Cambios <span class="badge bg-light text-dark ms-1" id="contador-cambios">' + cambiosPendientes.length + '</span>';
             }
-            
-            btn.disabled = false;
-            btn.innerHTML = '<i class="bi bi-check2-all"></i> Aplicar Cambios <span class="badge bg-light text-dark ms-1" id="contador-cambios">0</span>';
-            actualizarBotonAplicar();
         })
         .catch(error => {
             console.error('Error:', error);
             alert('Error al conectar con el servidor');
             btn.disabled = false;
-            btn.innerHTML = '<i class="bi bi-check2-all"></i> Aplicar Cambios <span class="badge bg-light text-dark ms-1" id="contador-cambios">0</span>';
-            actualizarBotonAplicar();
+            btn.innerHTML = '<i class="bi bi-check2-all"></i> Aplicar Cambios <span class="badge bg-light text-dark ms-1" id="contador-cambios">' + cambiosPendientes.length + '</span>';
         });
     }
 </script>

@@ -29,6 +29,12 @@ def obtener_datos():
         visits = get_visits()
         print(f"[DEBUG] Visitas obtenidas: {len(visits)}")
         
+        carga_por_tecnico = {}
+        for v in visits:
+            tech_id = v.get('technician_id')
+            if tech_id and v.get('status') not in ['completada', 'completat', 'completado']:
+                carga_por_tecnico[tech_id] = carga_por_tecnico.get(tech_id, 0) + 1
+        
         tecnicos = []
         for t in technicians:
             tecnicos.append({
@@ -36,7 +42,8 @@ def obtener_datos():
                 'nombre': t.get('name'),
                 'zona': t.get('zone'),
                 'expertice': t.get('expertice', 5),
-                'expert': t.get('expert', False)
+                'expert': t.get('expert', False),
+                'carga_actual': carga_por_tecnico.get(t.get('id'), 0)
             })
         
         tareas_pendientes = []
