@@ -59,6 +59,9 @@ class _AiAssistantScreenState extends State<AiAssistantScreen> {
     if (message.contains('No hay tareas pendientes')) {
       return 'No hay tareas pendientes para esta semana.';
     }
+    if (message.contains('planning IA')) {
+      return 'El backend del planificador no responde. Revisa la API antes de volver a intentarlo.';
+    }
     return 'No se pudo generar el planning semanal.';
   }
 
@@ -109,7 +112,7 @@ class _AiAssistantScreenState extends State<AiAssistantScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Genera una agenda priorizando tareas críticas, SLA y clientes con contratos más valiosos, concentrando la ruta en dos días.',
+                    'Genera una agenda priorizando tareas críticas, SLA y clientes con contratos más valiosos.',
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
                   const SizedBox(height: 16),
@@ -126,8 +129,8 @@ class _AiAssistantScreenState extends State<AiAssistantScreen> {
                         label: 'SLA > criticidad > preventivo',
                       ),
                       const _InfoChip(
-                        icon: Icons.rule,
-                        label: 'Planificación determinista',
+                        icon: Icons.smart_toy_outlined,
+                        label: 'Backend IA',
                       ),
                     ],
                   ),
