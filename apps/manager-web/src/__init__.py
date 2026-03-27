@@ -49,6 +49,5 @@ def create_app(config_class=Config):
     
     with app.app_context():
         db.create_all()
-        ensure_operational_data(app)
     
     return app
