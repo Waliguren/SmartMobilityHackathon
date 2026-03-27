@@ -18,11 +18,11 @@
                 <div class="col-md-3">
                     <select class="form-select">
                         <option value="">Todas las zonas</option>
-                        <option value="centro">Centro</option>
-                        <option value="norte">Norte</option>
-                        <option value="sur">Sur</option>
-                        <option value="este">Este</option>
-                        <option value="oeste">Oeste</option>
+                        <option value="Tarragona">Tarragona</option>
+                        <option value="Reus">Reus</option>
+                        <option value="Barcelona">Barcelona</option>
+                        <option value="Cambrils">Cambrils</option>
+                        <option value="Tortosa">Tortosa</option>
                     </select>
                 </div>
                 <div class="col-md-3">
@@ -41,57 +41,35 @@
                             <th>ID</th>
                             <th>Nombre</th>
                             <th>Zona</th>
-                            <th>Tareas Hoy</th>
-                            <th>Estado</th>
+                            <th>Experiencia</th>
+                            <th>Expert</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
+                        {% for tec in tecnicos %}
                         <tr>
-                            <td>#001</td>
+                            <td>{{ tec.id }}</td>
                             <td>
                                 <div class="d-flex align-items-center">
-                                    <div class="avatar me-2">JG</div>
-                                    Juan García
+                                    <div class="avatar me-2">{{ tec.name[:2] }}</div>
+                                    {{ tec.name }}
                                 </div>
                             </td>
-                            <td><span class="badge bg-primary">Centro</span></td>
-                            <td>3</td>
-                            <td><span class="badge bg-success">Activo</span></td>
+                            <td><span class="badge bg-primary">{{ tec.zone }}</span></td>
+                            <td>{{ tec.expertice }}/10</td>
                             <td>
-                                <a href="{{ url_for('tecnicos.detalle_tecnico', tecnico_id=1) }}" class="btn btn-sm btn-outline-primary">Ver</a>
+                                {% if tec.expert %}
+                                <span class="badge bg-success">Expert</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Normal</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{{ url_for('tecnicos.detalle_tecnico', tecnico_id=tec.id) }}" class="btn btn-sm btn-outline-primary">Ver</a>
                             </td>
                         </tr>
-                        <tr>
-                            <td>#002</td>
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    <div class="avatar me-2">ML</div>
-                                    María López
-                                </div>
-                            </td>
-                            <td><span class="badge bg-info">Norte</span></td>
-                            <td>1</td>
-                            <td><span class="badge bg-success">Activo</span></td>
-                            <td>
-                                <a href="{{ url_for('tecnicos.detalle_tecnico', tecnico_id=2) }}" class="btn btn-sm btn-outline-primary">Ver</a>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>#003</td>
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    <div class="avatar me-2">PS</div>
-                                    Pedro Sánchez
-                                </div>
-                            </td>
-                            <td><span class="badge bg-warning">Sur</span></td>
-                            <td>2</td>
-                            <td><span class="badge bg-success">Activo</span></td>
-                            <td>
-                                <a href="{{ url_for('tecnicos.detalle_tecnico', tecnico_id=3) }}" class="btn btn-sm btn-outline-primary">Ver</a>
-                            </td>
-                        </tr>
+                        {% endfor %}
                     </tbody>
                 </table>
             </div>

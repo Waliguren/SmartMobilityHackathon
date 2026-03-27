@@ -21,7 +21,7 @@ def create_app(config_class=Config):
     login_manager.init_app(app)
     bcrypt.init_app(app)
     
-    login_manager.login_view = 'login'
+    login_manager.login_view = 'auth.login'
     login_manager.login_message_category = 'info'
     
     from src.routes.main import main
@@ -30,6 +30,7 @@ def create_app(config_class=Config):
     from src.routes.tecnicos import tecnicos
     from src.routes.riesgos import riesgos
     from src.routes.mapa import mapa
+    from src.routes.asignacion import asignacion
     
     app.register_blueprint(main)
     app.register_blueprint(tareas)
@@ -37,6 +38,10 @@ def create_app(config_class=Config):
     app.register_blueprint(tecnicos)
     app.register_blueprint(riesgos)
     app.register_blueprint(mapa)
+    app.register_blueprint(asignacion)
+    
+    from src.services.firebase_service import init_firebase
+    init_firebase()
     
     with app.app_context():
         db.create_all()
