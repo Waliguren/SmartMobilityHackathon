@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 import '../main.dart';
@@ -60,10 +59,7 @@ class _AiAssistantScreenState extends State<AiAssistantScreen> {
     if (message.contains('No hay tareas pendientes')) {
       return 'No hay tareas pendientes para esta semana.';
     }
-    if (message.contains('planning IA')) {
-      return 'El backend del planificador no responde. Revisa la API antes de volver a intentarlo.';
-    }
-    return 'No se pudo generar el planning semanal IA.';
+    return 'No se pudo generar el planning semanal.';
   }
 
   Map<String, List<AiScheduledTask>> _groupTasksByDay(List<AiScheduledTask> tasks) {
@@ -96,163 +92,146 @@ class _AiAssistantScreenState extends State<AiAssistantScreen> {
             end: Alignment.bottomCenter,
           ),
         ),
-        child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-          stream: technician == null
-              ? null
-              : FirebaseFirestore.instance
-                    .collection('visits')
-                    .where('technician_id', isEqualTo: technician.id)
-                    .where('status', whereIn: ['pendent', 'en_curs'])
-                    .snapshots(),
-          builder: (context, snapshot) {
-            final pendingTasks = snapshot.data?.docs.length ?? 0;
-            final groupedPlan = _groupTasksByDay(
-              _plan?.scheduledTasks ?? const <AiScheduledTask>[],
-            );
-
-            return ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                _SectionCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Planificador Semanal IA',
-                        style: Theme.of(context).textTheme.headlineSmall
-                            ?.copyWith(fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Genera una agenda de lunes a viernes priorizando tareas críticas, SLA y clientes con contratos más valiosos.',
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                      const SizedBox(height: 16),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: [
-                          _InfoChip(
-                            icon: Icons.task_alt,
-                            label: '$pendingTasks tareas pendientes',
-                          ),
-                          const _InfoChip(
-                            icon: Icons.priority_high,
-                            label: 'SLA > criticidad > preventivo',
-                          ),
-                          const _InfoChip(
-                            icon: Icons.smart_toy_outlined,
-                            label: 'Groq + fallback heurístico',
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton.icon(
-                          onPressed: _isGenerating ? null : _generatePlan,
-                          icon: _isGenerating
-                              ? const SizedBox(
-                                  width: 18,
-                                  height: 18,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
-                                )
-                              : const Icon(Icons.auto_awesome),
-                          label: const Text('Planificador Semanal IA'),
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                          ),
-                        ),
-                      ),
-                    ],
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            _SectionCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Planificador Semanal IA',
+                    style: Theme.of(
+                      context,
+                    ).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 16),
-                const _SectionCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Preferencias mockeadas',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                      ),
-                      SizedBox(height: 10),
-                      _PreferenceRow(
-                        icon: Icons.lunch_dining,
-                        text: 'Martes 12:30 - 14:30: comida personal bloqueada',
-                      ),
-                      SizedBox(height: 8),
-                      _PreferenceRow(
-                        icon: Icons.sports_soccer,
-                        text: 'Jueves desde las 16:00: partido y tarde cerrada',
-                      ),
-                    ],
+                  const SizedBox(height: 8),
+                  Text(
+                    'Genera una agenda de lunes a viernes priorizando tareas críticas, SLA y clientes con contratos más valiosos.',
+                    style: Theme.of(context).textTheme.bodyMedium,
                   ),
-                ),
-                if (_errorMessage != null) ...[
                   const SizedBox(height: 16),
-                  _SectionCard(
-                    backgroundColor: const Color(0xFFFFF1F0),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      _InfoChip(
+                        icon: Icons.person_pin_circle_outlined,
+                        label: technician?.name ?? 'Sin técnico',
+                      ),
+                      const _InfoChip(
+                        icon: Icons.priority_high,
+                        label: 'SLA > criticidad > preventivo',
+                      ),
+                      const _InfoChip(
+                        icon: Icons.rule,
+                        label: 'Planificación determinista',
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: _isGenerating ? null : _generatePlan,
+                      icon: _isGenerating
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.auto_awesome),
+                      label: const Text('Planificador Semanal IA'),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            const _SectionCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Preferencias del técnico',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  SizedBox(height: 10),
+                  _PreferenceRow(
+                    icon: Icons.lunch_dining,
+                    text: 'Martes 12:30 - 14:30: comida personal bloqueada',
+                  ),
+                  SizedBox(height: 8),
+                  _PreferenceRow(
+                    icon: Icons.sports_soccer,
+                    text: 'Jueves desde las 16:00: partido y tarde cerrada',
+                  ),
+                ],
+              ),
+            ),
+            if (_errorMessage != null) ...[
+              const SizedBox(height: 16),
+              _SectionCard(
+                backgroundColor: const Color(0xFFFFF1F0),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(Icons.error_outline, color: Colors.redAccent),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        _errorMessage!,
+                        style: const TextStyle(color: Colors.redAccent),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+            if (_plan != null) ...[
+              const SizedBox(height: 16),
+              _SectionCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
                       children: [
-                        const Icon(Icons.error_outline, color: Colors.redAccent),
-                        const SizedBox(width: 12),
                         Expanded(
                           child: Text(
-                            _errorMessage!,
-                            style: const TextStyle(color: Colors.redAccent),
+                            'Plan generado',
+                            style: Theme.of(context).textTheme.titleLarge
+                                ?.copyWith(fontWeight: FontWeight.bold),
                           ),
+                        ),
+                        const Chip(
+                          label: Text('Determinista'),
+                          backgroundColor: Color(0xFFD8F5D0),
                         ),
                       ],
                     ),
-                  ),
-                ],
-                if (_plan != null) ...[
-                  const SizedBox(height: 16),
-                  _SectionCard(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                'Resultado del asistente',
-                                style: Theme.of(context).textTheme.titleLarge
-                                    ?.copyWith(fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                            if (_plan!.usedFallback)
-                              const Chip(
-                                label: Text('Fallback parcial'),
-                                backgroundColor: Color(0xFFFFE7BA),
-                              )
-                            else
-                              const Chip(
-                                label: Text('Groq OK'),
-                                backgroundColor: Color(0xFFD8F5D0),
-                              ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Text(_plan!.summary),
-                        const SizedBox(height: 12),
-                        ..._plan!.preferencesAssumed.map(
-                          (preference) => Padding(
-                            padding: const EdgeInsets.only(bottom: 6),
-                            child: Text('• $preference'),
-                          ),
-                        ),
-                      ],
+                    const SizedBox(height: 8),
+                    Text(_plan!.summary),
+                    const SizedBox(height: 12),
+                    ..._plan!.preferencesAssumed.map(
+                      (preference) => Padding(
+                        padding: const EdgeInsets.only(bottom: 6),
+                        child: Text('• $preference'),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  ..._weekdaySections(groupedPlan),
-                ],
-              ],
-            );
-          },
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              ..._weekdaySections(
+                _groupTasksByDay(_plan?.scheduledTasks ?? const <AiScheduledTask>[]),
+              ),
+            ],
+          ],
         ),
       ),
     );
