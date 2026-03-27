@@ -4,7 +4,7 @@
 
 **Smart Mobility** es una plataforma integral para la gestión operativa de técnicos de campo especializados en la instalación, mantenimiento y resolución de incidencias de cargadores de coches eléctricos. El sistema permite a los gestores planificar rutas, asignar tareas a técnicos, visualizar el estado de las operaciones en tiempo real mediante un mapa interactivo, y aprovechar algoritmos de optimización y herramientas de IA para mejorar la eficiencia operativa.
 
-El proyecto está desarrollado como parte de un hackathon y abarca tres superficies principales: una aplicación web de gestión, una aplicación móvil para técnicos (en desarrollo) y un backend que integra bases de datos relacionales con servicios en la nube.
+El proyecto está desarrollado como parte de un hackathon y abarca tres superficies principales: una aplicación web de gestión, una aplicación móvil para técnicos ya funcional como demo operativa y un backend que integra bases de datos relacionales con servicios en la nube.
 
 ---
 
@@ -13,7 +13,7 @@ El proyecto está desarrollado como parte de un hackathon y abarca tres superfic
 | Componente | Estado | Tecnología |
 |------------|--------|------------|
 | **Web de Gestión** | ✅ Completado | Flask + SQLite/PostgreSQL |
-| **App Móvil Técnicos** | 🔄 En desarrollo | Flutter |
+| **App Móvil Técnicos** | ✅ Demo funcional | Flutter + Firebase |
 | **Backend API** | ✅ Funcional | FastAPI + SQLAlchemy |
 | **Base de Datos** | ✅ Operativa | PostgreSQL + Firebase Firestore |
 | **Motor de IA** | ✅ Implementado | Groq/Llama + VRP Optimizer |
@@ -107,6 +107,20 @@ El sistema utiliza un algoritmo de puntuación ponderada que considera:
 - Integración de datos tanto de PostgreSQL como de Firebase Firestore
 - Muestra todas las tareas incluyendo las pendientes de asignar
 
+### 9. App móvil para técnicos
+
+La app móvil `technician-mobile` ya cubre el flujo básico del técnico en campo:
+
+- Login demo contra la colección `technicians` de Firestore
+- Home con accesos rápidos a mapa, agenda, perfil y AI-Assistant
+- Agenda de tareas activas (`pendent`, `en_curs`) desde `visits`
+- Detalle de tarea con mapa, ruta OSRM y apertura de Google Maps
+- Perfil técnico con métricas básicas y acceso a la agenda completa
+- AI-Assistant con botón `Planificador IA`
+- Integración con el backend `POST /api/v1/planning/ai-weekly-plan` para generar una propuesta semanal priorizada por criticidad, SLA y valor de cliente
+
+La app móvil usa Firebase Firestore para datos operativos, `flutter_map` para mapas y un backend FastAPI para el planning semanal IA.
+
 ---
 
 ## Arquitectura Técnica
@@ -145,7 +159,7 @@ SmartMobilityHackathon/
 │   │   ├── config.py                   # Configuración
 │   │   ├── run.py                       # Punto de entrada
 │   │   └── requirements.txt
-│   └── technician-mobile/              # App Flutter (pendiente)
+│   └── technician-mobile/              # App Flutter para técnicos
 ├── backend/
 │   ├── api/                           # FastAPI
 │   ├── firebase/                      # Firebase Functions
@@ -161,6 +175,7 @@ SmartMobilityHackathon/
 | Capa | Tecnología | Versión |
 |------|------------|---------|
 | **Frontend Web** | Flask + Jinja2 | Flask 3.x |
+| **Frontend Móvil** | Flutter | SDK 3.11+ |
 | **Frontend JS** | Vanilla JavaScript | - |
 | **Mapas** | Leaflet + OpenStreetMap | - |
 | **Backend** | FastAPI + SQLAlchemy | Python 3.12+ |
@@ -193,7 +208,9 @@ El sistema opera con dos fuentes de datos complementarias:
 1. Las tareas se originan en sistemas externos y se almacenan en Firebase Firestore
 2. El dashboard de gestión lee de ambas bases de datos
 3. Las asignaciones se guardan en Firebase actualizando el campo `technician_id`
-4. El mapa integra datos de ambas fuentes para mostrar el estado completo
+4. La app móvil lee `technicians`, `visits`, `incidences` y `contracts` desde Firestore
+5. El AI-Assistant móvil agrega esos datos y llama al backend FastAPI para obtener el planning semanal IA
+6. El mapa integra datos de ambas fuentes para mostrar el estado completo
 
 ---
 
@@ -242,6 +259,27 @@ python run.py
 # La aplicación estará disponible en http://localhost:5000
 ```
 
+### App móvil Flutter
+
+La app móvil vive en `apps/technician-mobile` y actualmente funciona como cliente operativo de demo.
+
+```bash
+cd apps/technician-mobile
+flutter pub get
+flutter run
+```
+
+Si necesitas apuntar el planificador IA a otra URL del backend:
+
+```bash
+flutter run --dart-define=FLUTTER_API_BASE_URL=http://localhost:8000
+```
+
+Notas útiles:
+
+- En emulador Android, `10.0.2.2` apunta al host local.
+- En dispositivo físico, hay que usar la IP real de la máquina donde corre el backend.
+
 ### Credenciales de Acceso
 
 Por defecto, el sistema utiliza un usuario hardcodeado para desarrollo:
@@ -263,6 +301,8 @@ Para conectar con Firebase Firestore:
    - `FIREBASE_CLIENT_EMAIL`
    - Etc.
 
+La app móvil Android ya incluye `google-services.json`, pero sigue dependiendo de que Firebase esté correctamente configurado para la plataforma donde se ejecute.
+
 ### Configuración de IA (Groq)
 
 Para habilitar las explicaciones de IA:
@@ -272,6 +312,8 @@ Para habilitar las explicaciones de IA:
    ```
    GROQ_API_KEY=tu_api_key_aqui
    ```
+
+La app móvil no llama directamente a Groq. El consumo de IA se realiza a través del backend FastAPI.
 
 ---
 
@@ -353,6 +395,12 @@ Para habilitar las explicaciones de IA:
 |--------|------|-------------|
 | GET | `/mapa` | Vista del mapa operativo |
 | GET | `/api/tareas-mapa` | API de tareas para el mapa |
+
+### Backend de planificación consumido por la app móvil
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| POST | `/api/v1/planning/ai-weekly-plan` | Genera un planning semanal IA para el técnico móvil |
 
 ### Asistente de Asignación
 
@@ -449,8 +497,8 @@ docker run -p 5000:5000 smartmobility-web
 
 ### Pendiente 🔄
 
-- Implementación completa de la app Flutter para técnicos
-- Integración real con Groq API para explicaciones avanzadas
+- Endurecer la app Flutter para uso menos demo y más estable
+- Integración real con Groq API para explicaciones avanzadas y refinamiento del planning
 - Sistema de autoaprendizaje (guardar correcciones del usuario)
 - Sincronización offline para la app móvil
 - Integración con OpenChargeMap
