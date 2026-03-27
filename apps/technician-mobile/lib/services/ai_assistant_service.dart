@@ -179,6 +179,82 @@ class AiAssistantService {
       ),
     );
 
+    scheduled.add(
+      const AiScheduledTask(
+        visitId: 'hardcoded-tuesday-01',
+        title: 'Revisión de conectores auxiliares',
+        client: 'Ajuntament TGN',
+        address: 'Rambla Nova, Tarragona',
+        contractType: 'Manteniment Or',
+        weekday: 'tuesday',
+        startTime: '09:30',
+        endTime: '11:00',
+        priorityScore: 68,
+        reason: 'Tarea añadida para completar la ruta del martes sin invadir la comida reservada.',
+      ),
+    );
+
+    scheduled.add(
+      const AiScheduledTask(
+        visitId: 'hardcoded-wednesday-01',
+        title: 'Inspección preventiva de estación',
+        client: 'Port Cambrils',
+        address: 'Port de Cambrils',
+        contractType: 'Manteniment Or',
+        weekday: 'wednesday',
+        startTime: '15:30',
+        endTime: '16:30',
+        priorityScore: 61,
+        reason: 'Visita de soporte añadida para reforzar el bloque operativo del miércoles.',
+      ),
+    );
+
+    scheduled.add(
+      const AiScheduledTask(
+        visitId: 'hardcoded-thursday-01',
+        title: 'Chequeo express de firmware',
+        client: 'Tesla Espanya',
+        address: 'Plaça de la Llibertat, Reus',
+        contractType: 'Revisió Premium',
+        weekday: 'thursday',
+        startTime: '10:00',
+        endTime: '11:15',
+        priorityScore: 74,
+        reason: 'Tarea fijada antes del cierre de la tarde del jueves para respetar el partido.',
+      ),
+    );
+
+    scheduled.add(
+      const AiScheduledTask(
+        visitId: 'calendar-block-thursday-match',
+        title: 'Incompatibilidad del técnico',
+        client: 'Calendario personal',
+        address: 'Partido programado',
+        contractType: 'Bloqueo',
+        weekday: 'thursday',
+        startTime: '16:00',
+        endTime: '18:00',
+        priorityScore: 0,
+        reason: 'Bloqueo personal del jueves por la tarde.',
+        isBlocked: true,
+      ),
+    );
+
+    scheduled.add(
+      const AiScheduledTask(
+        visitId: 'hardcoded-friday-01',
+        title: 'Validación final de cargador',
+        client: 'Repsol BCN',
+        address: 'Diagonal Mar, Barcelona',
+        contractType: 'Bàsic',
+        weekday: 'friday',
+        startTime: '09:30',
+        endTime: '10:45',
+        priorityScore: 57,
+        reason: 'Cierre de semana con tarea complementaria de validación en campo.',
+      ),
+    );
+
     scheduled.sort(AiScheduledTask.compareByWeekdayAndTime);
     return scheduled;
   }
