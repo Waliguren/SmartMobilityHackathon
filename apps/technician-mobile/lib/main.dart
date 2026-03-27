@@ -43,7 +43,7 @@ class MyApp extends StatelessWidget {
         '/map': (_) => const MapScreen(),
         '/agenda': (_) => AgendaScreen(technicianId: loggedTechnician?.id),
         '/profile': (_) => ProfileScreen(technician: loggedTechnician),
-        '/others': (_) => const OthersScreen(),
+        '/ai-assistant': (_) => const AiAssistantScreen(),
       },
     );
   }

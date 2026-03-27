@@ -54,8 +54,9 @@ class HomeScreen extends StatelessWidget {
                 onPressed: () => Navigator.pushNamed(context, '/profile'),
               ),
               IconButton(
-                icon: const Icon(Icons.more_horiz),
-                onPressed: () => Navigator.pushNamed(context, '/others'),
+                icon: const Icon(Icons.smart_toy_outlined),
+                tooltip: 'AI-Assistant',
+                onPressed: () => Navigator.pushNamed(context, '/ai-assistant'),
               ),
             ],
           ),

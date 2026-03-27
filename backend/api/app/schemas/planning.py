@@ -41,3 +41,47 @@ class WeeklyPlanningResponse(BaseModel):
     generated_plans: list[TechnicianWeeklyPlan]
     unassigned_visit_ids: list[int]
     message: str
+
+
+class AiAssistantTaskInput(BaseModel):
+    visit_id: str
+    title: str
+    address: str
+    status: str
+    visit_type: str
+    priority: str
+    client: str
+    contract_type: str
+    estimated_minutes: int = 60
+    description: str | None = None
+    created_at: datetime | None = None
+    planned_date: datetime | None = None
+
+
+class AiAssistantPlanningRequest(BaseModel):
+    week_start_date: date
+    technician_id: str
+    technician_name: str
+    technician_zone: str | None = None
+    tasks: list[AiAssistantTaskInput]
+
+
+class AiAssistantScheduledTask(BaseModel):
+    visit_id: str
+    title: str
+    client: str
+    address: str
+    contract_type: str
+    weekday: str
+    start_time: str
+    end_time: str
+    priority_score: float
+    reason: str
+
+
+class AiAssistantPlanningResponse(BaseModel):
+    engine: str
+    summary: str
+    preferences_assumed: list[str]
+    used_fallback: bool = False
+    scheduled_tasks: list[AiAssistantScheduledTask]

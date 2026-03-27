@@ -32,6 +32,9 @@ class Settings(BaseSettings):
     openchargemap_api_key: str | None = None
     openchargemap_base_url: str = "https://api.openchargemap.io/v3"
 
+    groq_api_key: str | None = None
+    grok_api_key: str | None = None
+
     google_cloud_project_id: str | None = None
     google_cloud_location: str = "global"
     google_service_account_file: str | None = None
