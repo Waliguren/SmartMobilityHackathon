@@ -13,25 +13,29 @@
                     <div class="col-md-3">
                         <select class="form-select" name="tipo">
                             <option value="">Tipo</option>
-                            <option value="incidencia" {% if filters.tipo == 'incidencia' %}selected{% endif %}>Incidencia</option>
-                            <option value="mantenimiento" {% if filters.tipo == 'mantenimiento' %}selected{% endif %}>Mantenimiento</option>
-                            <option value="puesta_marcha" {% if filters.tipo == 'puesta_marcha' %}selected{% endif %}>Puesta en marcha</option>
+                            <option value="avaria">Incidencia</option>
+                            <option value="manteniment">Mantenimiento</option>
+                            <option value="preventiu">Preventivo</option>
+
                         </select>
                     </div>
                     <div class="col-md-3">
                         <select class="form-select" name="zona">
                             <option value="">Zona</option>
-                            {% for zone in zones %}
-                            <option value="{{ zone }}" {% if filters.zona == zone %}selected{% endif %}>{{ zone }}</option>
-                            {% endfor %}
+                            <option value="Tarragona">Tarragona</option>
+                            <option value="Reus">Reus</option>
+                            <option value="Barcelona">Barcelona</option>
+                            <option value="Cambrils">Cambrils</option>
+                            <option value="Tortosa">Tortosa</option>
                         </select>
                     </div>
                     <div class="col-md-3">
-                        <select class="form-select" name="prioridad">
-                            <option value="">Prioridad</option>
-                            <option value="alta" {% if filters.prioridad == 'alta' %}selected{% endif %}>Alta</option>
-                            <option value="mitja" {% if filters.prioridad == 'mitja' %}selected{% endif %}>Media</option>
-                            <option value="baixa" {% if filters.prioridad == 'baixa' %}selected{% endif %}>Baja</option>
+                        <select class="form-select">
+                            <option value="">Estado</option>
+                            <option value="pendent">Pendiente</option>
+                            <option value="en_proces">En proceso</option>
+                            <option value="completada">Completada</option>
+
                         </select>
                     </div>
                     <div class="col-md-3">
@@ -50,11 +54,9 @@
                         <tr>
                             <th>ID</th>
                             <th>Tipo</th>
-                            <th>Cliente</th>
                             <th>Dirección</th>
-                            <th>Zona</th>
-                            <th>Prioridad</th>
-                            <th>Técnico</th>
+                            <th>Estado</th>
+                            <th>Technician ID</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
@@ -62,19 +64,29 @@
                         {% for task in tasks %}
                         <tr>
                             <td>{{ task.id }}</td>
-                            <td><span class="badge bg-danger">{{ task.type_label }}</span></td>
-                            <td>{{ task.client }}</td>
+                            <td>
+                                {% if task.tipo_display == 'Incidencia' %}
+                                <span class="badge bg-danger">{{ task.tipo_display }}</span>
+                                {% elif task.tipo_display == 'Mantenimiento' %}
+                                <span class="badge bg-info">{{ task.tipo_display }}</span>
+                                {% else %}
+                                <span class="badge bg-success">{{ task.tipo_display }}</span>
+                                {% endif %}
+                            </td>
                             <td>{{ task.address }}</td>
-                            <td>{{ task.zone }}</td>
-                            <td><span class="badge bg-{{ task.priority_badge }}">{{ task.priority_label }}</span></td>
-                            <td>{{ task.technician_name or '-' }}</td>
+                            <td>
+                                {% if task.estado_display == 'Pendiente' %}
+                                <span class="badge bg-warning">{{ task.estado_display }}</span>
+                                {% elif task.estado_display == 'En proceso' %}
+                                <span class="badge bg-primary">{{ task.estado_display }}</span>
+                                {% else %}
+                                <span class="badge bg-success">{{ task.estado_display }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ task.technician_id or '-' }}</td>
                             <td>
                                 <a href="{{ url_for('tareas.detalle_tarea', tarea_id=task.id) }}" class="btn btn-sm btn-primary">Ver</a>
                             </td>
-                        </tr>
-                        {% else %}
-                        <tr>
-                            <td colspan="8" class="text-center text-muted py-4">No hay tareas para los filtros seleccionados.</td>
                         </tr>
                         {% endfor %}
                     </tbody>

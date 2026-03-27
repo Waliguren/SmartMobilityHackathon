@@ -33,8 +33,8 @@ def create_app(config_class=Config):
     from src.routes.tecnicos import tecnicos
     from src.routes.riesgos import riesgos
     from src.routes.mapa import mapa
-    from src.models import operations, user
-    from src.data_store import ensure_operational_data
+    from src.routes.asignacion import asignacion
+
     
     app.register_blueprint(main)
     app.register_blueprint(tareas)
@@ -42,6 +42,10 @@ def create_app(config_class=Config):
     app.register_blueprint(tecnicos)
     app.register_blueprint(riesgos)
     app.register_blueprint(mapa)
+    app.register_blueprint(asignacion)
+    
+    from src.services.firebase_service import init_firebase
+    init_firebase()
     
     with app.app_context():
         db.create_all()

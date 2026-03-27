@@ -24,8 +24,9 @@ SmartMobilityHackathon/
 ├── apps/
 │   ├── manager-web/        # App Flask - EN DESARROLLO
 │   │   ├── src/
-│   │   │   ├── routes/     # auth.py, main.py, tareas.py, tecnicos.py, riesgos.py, mapa.py
+│   │   │   ├── routes/     # auth, main, tareas, tecnicos, riesgos, mapa, asignacion
 │   │   │   ├── templates/  # HTML templates
+│   │   │   ├── services/   # vrp_optimizer.py, ia_explicacion.py
 │   │   │   ├── models/     # User model
 │   │   │   └── static/     # CSS, JS
 │   │   ├── config.py
@@ -52,7 +53,6 @@ SmartMobilityHackathon/
 **2. Dashboard**
 - Tarjetas con métricas (Tareas Pendientes, Riesgos SLA, Técnicos Activos)
 - Tabla de tareas recientes sin asignar
-- Enlaces funcionales a: /riesgos, /tecnicos
 
 **3. Panel de Control**
 - Estadísticas con iconos (todos clickeables)
@@ -62,7 +62,6 @@ SmartMobilityHackathon/
 **4. Gestión de Tareas**
 - Lista con filtros (Tipo, Zona, Prioridad)
 - Tabs: Pendientes, Asignadas, Completadas
-- Paginación
 
 **5. Detalle de Tarea**
 - Datos generales de la tarea
@@ -72,34 +71,30 @@ SmartMobilityHackathon/
 **6. Lista Técnicos**
 - Buscador por nombre
 - Filtros por zona y estado
-- Tabla con: ID, Nombre, Zona, Tareas Hoy, Estado
-- Avatares con iniciales
+- Tabla con avatares
 
 **7. Detalle Técnico**
 - Información del técnico
 - Tareas asignadas hoy
 - Estadísticas del mes
 
-**8. Lista Riesgos SLA**
-- Alerta de riesgos críticos
-- Lista de tareas en riesgo
-- Filtros por severidad
+**8. Riesgos SLA**
+- Lista de riesgos con filtros
+- Detalle de riesgo con SLA
 
-**9. Detalle Riesgo**
-- Información del riesgo
-- SLA detallado (respuesta y resolución)
-- Acciones rápidas
+**9. Mapa de Tareas**
+- Mapa de España con Leaflet
+- Marcadores por tipo (incidencia/mantenimiento/puesta_marcha)
+- Filtros por tipo, estado, técnico
 
-**10. Mapa de Tareas** ✅ NUEVO
-- Mapa de España con Leaflet + OpenStreetMap
-- Marcadores circulares por tipo:
-  - 🔴 Incidencia (rojo)
-  - 🔵 Mantenimiento (azul)
-  - 🟢 Puesta en Marcha (verde)
-- Filtros por tipo, estado y técnico
-- Estadísticas en tiempo real
-- Popup con detalles al hacer click
-- Leyenda visible
+**10. Asistente de Asignación** ✅ NUEVO
+- Panel izquierdo: Carga de trabajo de cada técnico
+- Panel derecho: Tareas pendientes por asignar
+- Botón "Generar Recomendaciones" → Algoritmo VRP
+- Click en tarea → Modal con explicación IA
+- Botón "Editar" para cambiar técnico y prioridad
+- Botón "Confirmar" para aplicar asignación
+- Configuración de algoritmo (pesos ajustables)
 
 ---
 
@@ -110,6 +105,8 @@ SmartMobilityHackathon/
 | **Incidencia** | 🔴 Rojo | Problemas/averías |
 | **Mantenimiento** | 🔵 Azul | Mantenimiento preventivo |
 | **Puesta en Marcha** | 🟢 Verde | Nueva instalación |
+
+---
 
 ## Estados de Tareas
 
@@ -131,8 +128,12 @@ SmartMobilityHackathon/
 | `/panel` | main | Panel de control |
 | `/tareas` | tareas | Lista de tareas |
 | `/tareas/<id>` | tareas | Detalle de tarea |
-| `/mapa` | mapa | Mapa de tareas (NUEVO) |
-| `/api/tareas-mapa` | mapa | API de tareas para el mapa |
+| `/mapa` | mapa | Mapa de tareas |
+| `/api/tareas-mapa` | mapa | API del mapa |
+| `/asignacion` | asignacion | Asistente de asignación (NUEVO) |
+| `/api/asignacion/datos` | asignacion | Datos de técnicos y tareas |
+| `/api/asignacion/recomendar` | asignacion | Genera recomendaciones |
+| `/api/asignacion/asignar` | asignacion | Confirma asignación |
 | `/tecnicos` | tecnicos | Lista de técnicos |
 | `/tecnicos/<id>` | tecnicos | Detalle de técnico |
 | `/riesgos` | riesgos | Lista de riesgos SLA |
@@ -140,12 +141,25 @@ SmartMobilityHackathon/
 
 ---
 
-## Archivos Creados/Actualizados
+## Servicios de IA
 
-- `/apps/manager-web/src/routes/mapa.py` - NUEVO: Ruta del mapa + API
-- `/apps/manager-web/src/templates/mapa.html` - NUEVO: Página con Leaflet
-- `/apps/manager-web/src/__init__.py` - Actualizado con blueprint mapa
-- `/apps/manager-web/src/templates/base.html` - Actualizado con navegación
+### VRP Optimizer (`services/vrp_optimizer.py`)
+- Algoritmo de puntuación ponderada
+- Factores: distancia (30%), carga trabajo (25%), zona (25%), SLA (20%)
+- Función Haversine para calcular distancias
+
+### IA Explicación (`services/ia_explicacion.py`)
+- Genera explicaciones basadas en reglas
+- Preparado para usar Groq/Llama (requiere API key)
+
+---
+
+## Archivos Nuevos
+
+- `/apps/manager-web/src/routes/asignacion.py` - Ruta + API de asignación
+- `/apps/manager-web/src/templates/asignacion.html` - UI del asistente
+- `/apps/manager-web/src/services/vrp_optimizer.py` - Algoritmo VRP
+- `/apps/manager-web/src/services/ia_explicacion.py` - Servicio de explicaciones
 
 ---
 
@@ -154,30 +168,26 @@ SmartMobilityHackathon/
 ### ✅ Completado
 - App Flask funcionando en puerto 5000
 - Login hardcodeado operativo
-- Dashboard con enlaces funcionales
-- Panel de control con elementos clickeables
-- Lista de tareas implementada
-- Detalle de tareas con UI de recomendaciones IA
-- Lista de técnicos implementada
-- Detalle de técnico implementado
-- Lista de riesgos SLA implementada
-- Detalle de riesgos implementado
-- Mapa de tareas con filtros por tipo, estado y técnico
+- Dashboard, Panel, Tareas, Técnicos, Riesgos
+- Mapa de tareas con filtros
+- Asistente de asignación con algoritmo VRP
+- Modal de explicación + edición
 - Navegación superior funcional
+- **Integración con Firebase Firestore** ✅ NUEVO
+- Datos importados desde JSON a Firestore
 
 ### ⏳ Pendiente
-- Filtros con JavaScript en listas
-- Base de datos real (Firebase Firestore)
-- IA real (Groq + Llama)
-- Conexión con Firebase
+- IA real (Groq + Llama) para explicaciones
+- Filtros JavaScript en listas
 - App Flutter para técnicos
+- Autoaprendizaje (guardar correcciones)
 
 ---
 
 ## Notas Importantes
 
 1. Login actual es HARDCODED - sin base de datos (temporal)
-2. La base de datos será Firebase Firestore (no SQLite)
+2. La base de datos será Firebase Firestore
 3. IA usará Groq con modelo Llama 3.1 (gratis, sin límites diarios)
 4. Las tareas vendrán de Firebase
 5. La IA debe explicar el "por qué" de sus recomendaciones
@@ -189,9 +199,8 @@ SmartMobilityHackathon/
 
 ## Próximos Pasos Sugeridos
 
-1. Conectar mapa con Firebase para datos reales
-2. Implementar filtros con JavaScript en listas
-3. Configurar proyecto Firebase y credenciales
-4. Crear estructura de datos en Firestore
-5. Implementar servicio Groq para recomendaciones
-6. Crear app Flutter para técnicos
+1. Conectar todos los módulos con Firebase
+2. Configurar API de Groq para explicaciones más naturales
+3. Implementar sistema de autoaprendizaje
+4. Crear app Flutter para técnicos
+5. Añadir más datos de ejemplo

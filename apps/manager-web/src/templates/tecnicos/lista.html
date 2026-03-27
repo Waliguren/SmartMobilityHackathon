@@ -9,6 +9,29 @@
 
     <div class="card">
         <div class="card-body">
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <input type="text" class="form-control" placeholder="Buscar por nombre...">
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select">
+                        <option value="">Todas las zonas</option>
+                        <option value="Tarragona">Tarragona</option>
+                        <option value="Reus">Reus</option>
+                        <option value="Barcelona">Barcelona</option>
+                        <option value="Cambrils">Cambrils</option>
+                        <option value="Tortosa">Tortosa</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select">
+                        <option value="">Todos los estados</option>
+                        <option value="activo">Activo</option>
+                        <option value="inactivo">Inactivo</option>
+                    </select>
+                </div>
+            </div>
+
             <div class="table-responsive">
                 <table class="table table-hover">
                     <thead>
@@ -16,31 +39,33 @@
                             <th>ID</th>
                             <th>Nombre</th>
                             <th>Zona</th>
-                            <th>Tareas Hoy</th>
-                            <th>Estado</th>
+                            <th>Experiencia</th>
+                            <th>Expert</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for technician in technicians %}
+                        {% for tec in tecnicos %}
                         <tr>
-                            <td>{{ technician.id }}</td>
+                            <td>{{ tec.id }}</td>
                             <td>
                                 <div class="d-flex align-items-center">
-                                    <div class="avatar me-2">{{ technician.initials }}</div>
-                                    {{ technician.name }}
+                                    <div class="avatar me-2">{{ tec.name[:2] }}</div>
+                                    {{ tec.name }}
                                 </div>
                             </td>
-                            <td><span class="badge bg-primary">{{ technician.zone }}</span></td>
-                            <td>{{ technician.tasks_today }}</td>
-                            <td><span class="badge bg-{{ technician.active_badge }}">{{ technician.active_label }}</span></td>
+                            <td><span class="badge bg-primary">{{ tec.zone }}</span></td>
+                            <td>{{ tec.expertice }}/10</td>
                             <td>
-                                <a href="{{ url_for('tecnicos.detalle_tecnico', tecnico_id=technician.id) }}" class="btn btn-sm btn-outline-primary">Ver</a>
+                                {% if tec.expert %}
+                                <span class="badge bg-success">Expert</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Normal</span>
+                                {% endif %}
                             </td>
-                        </tr>
-                        {% else %}
-                        <tr>
-                            <td colspan="6" class="text-center text-muted py-4">No hay tecnicos cargados en SQLite.</td>
+                            <td>
+                                <a href="{{ url_for('tecnicos.detalle_tecnico', tecnico_id=tec.id) }}" class="btn btn-sm btn-outline-primary">Ver</a>
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>
