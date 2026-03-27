@@ -38,12 +38,25 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(primarySwatch: Colors.blue),
       home: const LoginScreen(),
-      routes: {
-        '/home': (_) => const HomeScreen(),
-        '/map': (_) => const MapScreen(),
-        '/agenda': (_) => AgendaScreen(technicianId: loggedTechnician?.id),
-        '/profile': (_) => ProfileScreen(technician: loggedTechnician),
-        '/ai-assistant': (_) => const AiAssistantScreen(),
+      onGenerateRoute: (settings) {
+        switch (settings.name) {
+          case '/home':
+            return MaterialPageRoute(builder: (_) => const HomeScreen());
+          case '/map':
+            return MaterialPageRoute(builder: (_) => const MapScreen());
+          case '/agenda':
+            return MaterialPageRoute(
+              builder: (_) => AgendaScreen(technicianId: loggedTechnician?.id),
+            );
+          case '/profile':
+            return MaterialPageRoute(
+              builder: (_) => ProfileScreen(technician: loggedTechnician),
+            );
+          case '/others':
+            return MaterialPageRoute(builder: (_) => const OthersScreen());
+          default:
+            return MaterialPageRoute(builder: (_) => const HomeScreen());
+        }
       },
     );
   }
@@ -57,8 +70,12 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final TextEditingController _userController = TextEditingController();
-  final TextEditingController _passController = TextEditingController();
+  final TextEditingController _userController = TextEditingController(
+    text: "Marc Rovira",
+  );
+  final TextEditingController _passController = TextEditingController(
+    text: "1234",
+  );
   final String _hashedPass = _hashPassword("1234");
 
   Future<void> _login() async {

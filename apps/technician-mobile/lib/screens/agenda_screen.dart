@@ -26,7 +26,7 @@ class AgendaScreen extends StatelessWidget {
             return const Center(child: CircularProgressIndicator());
           }
 
-          var tasks = snapshot.data!.docs
+          final allTasks = snapshot.data!.docs
               .map(
                 (doc) => Task.fromFirestore(
                   doc.data() as Map<String, dynamic>,
@@ -35,27 +35,42 @@ class AgendaScreen extends StatelessWidget {
               )
               .toList();
 
-          if (techId != null && !showAll) {
-            tasks = tasks
+          List<Task> tasks;
+
+          if (techId != null && techId.isNotEmpty) {
+            if (showAll) {
+              tasks = allTasks
+                  .where(
+                    (t) =>
+                        t.technicianId.toLowerCase().trim() ==
+                        techId.toLowerCase().trim(),
+                  )
+                  .toList();
+            } else {
+              tasks = allTasks
+                  .where(
+                    (t) =>
+                        t.technicianId.toLowerCase().trim() ==
+                            techId.toLowerCase().trim() &&
+                        (t.status.toLowerCase().trim() == 'pendent' ||
+                            t.status.toLowerCase().trim() == 'en_curs'),
+                  )
+                  .toList();
+            }
+          } else if (showAll) {
+            tasks = allTasks;
+          } else {
+            tasks = allTasks
                 .where(
-                  (task) =>
-                      task.technicianId == techId &&
-                      (task.status == 'pendent' || task.status == 'en_curs'),
-                )
-                .toList();
-          } else if (techId != null && showAll) {
-            tasks = tasks.where((task) => task.technicianId == techId).toList();
-          } else if (!showAll) {
-            tasks = tasks
-                .where(
-                  (task) =>
-                      task.status == 'pendent' || task.status == 'en_curs',
+                  (t) =>
+                      t.status.toLowerCase().trim() == 'pendent' ||
+                      t.status.toLowerCase().trim() == 'en_curs',
                 )
                 .toList();
           }
 
           if (tasks.isEmpty) {
-            return const Center(child: Text('No hay tareas pendientes'));
+            return const Center(child: Text('No hay tareas'));
           }
 
           return ListView.builder(
@@ -64,7 +79,20 @@ class AgendaScreen extends StatelessWidget {
             itemBuilder: (context, index) {
               final task = tasks[index];
               final isPendiente = task.status == 'pendent';
-              final statusColor = isPendiente ? Colors.red : Colors.amber;
+              final isEnCurso = task.status == 'en_curs';
+              final isCompletada = task.status == 'completada';
+              Color statusColor;
+              String statusText;
+              if (isPendiente) {
+                statusColor = Colors.red;
+                statusText = 'Pendiente';
+              } else if (isEnCurso) {
+                statusColor = Colors.amber;
+                statusText = 'En curso';
+              } else {
+                statusColor = Colors.green;
+                statusText = 'Completada';
+              }
 
               return Card(
                 margin: const EdgeInsets.only(bottom: 12),
@@ -108,7 +136,7 @@ class AgendaScreen extends StatelessWidget {
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Text(
-                              isPendiente ? 'Pendiente' : 'En curso',
+                              statusText,
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 12,

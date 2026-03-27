@@ -12,6 +12,8 @@ class Task {
   final String status;
   final String incidenceId;
   final String technicianId;
+  final DateTime? startTime;
+  final DateTime? endTime;
 
   const Task({
     required this.id,
@@ -23,7 +25,44 @@ class Task {
     required this.status,
     required this.incidenceId,
     required this.technicianId,
+    this.startTime,
+    this.endTime,
   });
+
+  Duration get duration {
+    final start =
+        startTime ??
+        DateTime(
+          DateTime.now().year,
+          DateTime.now().month,
+          DateTime.now().day,
+          6,
+          0,
+          0,
+        );
+    final end = endTime ?? DateTime.now();
+    return end.difference(start);
+  }
+
+  String get formattedDuration {
+    final dur = duration;
+    final hours = dur.inHours;
+    final minutes = dur.inMinutes.remainder(60);
+    final seconds = dur.inSeconds.remainder(60);
+    return '${hours}h ${minutes}m ${seconds}s';
+  }
+
+  DateTime get displayStartTime {
+    return startTime ??
+        DateTime(
+          DateTime.now().year,
+          DateTime.now().month,
+          DateTime.now().day,
+          6,
+          0,
+          0,
+        );
+  }
 
   factory Task.fromFirestore(Map<String, dynamic> data, String docId) {
     final location = data['location'] as Map<String, dynamic>?;
@@ -42,6 +81,21 @@ class Task {
     final incidenceId = (data['incidence_id'] ?? '').toString();
     final technicianId = (data['technician_id'] ?? '').toString();
 
+    DateTime? startTime;
+    DateTime? endTime;
+    if (data['start_time'] != null) {
+      if (data['start_time'] is int) {
+        startTime = DateTime.fromMillisecondsSinceEpoch(
+          data['start_time'] * 1000,
+        );
+      }
+    }
+    if (data['end_time'] != null) {
+      if (data['end_time'] is int) {
+        endTime = DateTime.fromMillisecondsSinceEpoch(data['end_time'] * 1000);
+      }
+    }
+
     return Task(
       id: docId,
       titulo: '$visitType - $incidenceId',
@@ -52,6 +106,8 @@ class Task {
       status: (data['status'] ?? '').toString(),
       incidenceId: incidenceId,
       technicianId: technicianId,
+      startTime: startTime,
+      endTime: endTime,
     );
   }
 }
