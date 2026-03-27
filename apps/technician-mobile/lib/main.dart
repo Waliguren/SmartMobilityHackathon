@@ -1,11 +1,30 @@
+import 'dart:convert';
+import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'screens/home_screen.dart';
 import 'screens/map_screen.dart';
 import 'screens/agenda_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/others_screen.dart';
+import 'models/technician.dart';
 
-void main() {
+Technician? loggedTechnician;
+
+String _hashPassword(String password) {
+  final bytes = utf8.encode(password);
+  final digest = sha256.convert(bytes);
+  return digest.toString();
+}
+
+bool _verifyPassword(String inputPassword, String hashedPassword) {
+  return _hashPassword(inputPassword) == hashedPassword;
+}
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
   runApp(const MyApp());
 }
 
@@ -22,15 +41,14 @@ class MyApp extends StatelessWidget {
       routes: {
         '/home': (_) => const HomeScreen(),
         '/map': (_) => const MapScreen(),
-        '/agenda': (_) => const AgendaScreen(),
-        '/profile': (_) => const ProfileScreen(),
+        '/agenda': (_) => AgendaScreen(technicianId: loggedTechnician?.id),
+        '/profile': (_) => ProfileScreen(technician: loggedTechnician),
         '/others': (_) => const OthersScreen(),
       },
     );
   }
 }
 
-// ---------------- LOGIN SCREEN ----------------
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -41,18 +59,45 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _userController = TextEditingController();
   final TextEditingController _passController = TextEditingController();
-  final String validUser = "";
-  final String validPass = "";
+  final String _hashedPass = _hashPassword("1234");
 
-  void _login() {
-    if (_userController.text == validUser &&
-        _passController.text == validPass) {
-      Navigator.pushReplacementNamed(context, '/home');
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Usuario o contraseña incorrectos")),
-      );
+  Future<void> _login() async {
+    final username = _userController.text.trim();
+    final password = _passController.text;
+
+    if (username.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Rellena todos los campos")));
+      return;
     }
+
+    if (!_verifyPassword(password, _hashedPass)) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Contraseña incorrecta")));
+      return;
+    }
+
+    final snapshot = await FirebaseFirestore.instance
+        .collection('technicians')
+        .where('name', isEqualTo: username)
+        .get();
+
+    if (snapshot.docs.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Usuario no encontrado")));
+      return;
+    }
+
+    final doc = snapshot.docs.first;
+    final technician = Technician.fromFirestore(doc.data(), doc.id);
+
+    loggedTechnician = technician;
+
+    if (!mounted) return;
+    Navigator.pushReplacementNamed(context, '/home');
   }
 
   @override
@@ -66,7 +111,7 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.8),
+                color: Colors.white.withValues(alpha: 0.8),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Column(

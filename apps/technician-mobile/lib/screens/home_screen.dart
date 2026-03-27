@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../main.dart';
+import 'agenda_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -12,11 +14,11 @@ class HomeScreen extends StatelessWidget {
           Image.asset('assets/fondo.png', fit: BoxFit.cover),
           Column(
             mainAxisAlignment: MainAxisAlignment.start,
-            children: const [
-              SizedBox(height: 80),
+            children: [
+              const SizedBox(height: 80),
               Text(
-                "Bienvenido!",
-                style: TextStyle(
+                "Bienvenido ${loggedTechnician?.name ?? ''}!",
+                style: const TextStyle(
                   fontSize: 32,
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
@@ -27,7 +29,7 @@ class HomeScreen extends StatelessWidget {
         ],
       ),
       bottomNavigationBar: BottomAppBar(
-        color: Colors.white.withOpacity(0.9),
+        color: Colors.white.withValues(alpha: 0.9),
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 8.0),
           child: Row(
@@ -39,7 +41,13 @@ class HomeScreen extends StatelessWidget {
               ),
               IconButton(
                 icon: const Icon(Icons.event_note),
-                onPressed: () => Navigator.pushNamed(context, '/agenda'),
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        AgendaScreen(technicianId: loggedTechnician?.id),
+                  ),
+                ),
               ),
               IconButton(
                 icon: const Icon(Icons.person),
