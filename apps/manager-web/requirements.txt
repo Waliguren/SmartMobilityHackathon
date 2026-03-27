@@ -5,3 +5,4 @@ flask-bcrypt==1.0.1
 python-dotenv==1.0.0
 firebase-admin==6.3.0
 requests==2.31.0
+groq==0.4.2

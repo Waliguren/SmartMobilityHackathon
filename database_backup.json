@@ -1,0 +1,37 @@
+{
+  "technicians": [
+    { "id": "T01", "name": "Marc Rovira", "zone": "Tarragona", "expertice": 9, "expert": true },
+    { "id": "T02", "name": "Julia Soler", "zone": "Reus", "expertice": 7, "expert": true },
+    { "id": "T04", "name": "Laia Sanz", "zone": "Cambrils", "expertice": 8, "expert": true },
+    { "id": "T06", "name": "Sara Luna", "zone": "Tortosa", "expertice": 6, "expert": false },
+    { "id": "T08", "name": "Anna Vila", "zone": "Barcelona", "expertice": 10, "expert": true }
+  ],
+  "contracts": [
+    { "id": "C_TGN_01", "client_id": "Ajuntament TGN", "charger_id": "CH_001", "type": "Manteniment Or", "address": "Parc Central, Tarragona", "location": { "_latitude": 41.1169, "_longitude": 1.2395 }, "status": "actiu" },
+    { "id": "C_REUS_02", "client_id": "Tesla Espanya", "charger_id": "CH_005", "type": "Revisió Premium", "address": "Plaça de la Llibertat, Reus", "location": { "_latitude": 41.1555, "_longitude": 1.1072 }, "status": "actiu" },
+    { "id": "C_BCN_03", "client_id": "Repsol BCN", "charger_id": "CH_010", "type": "Bàsic", "address": "Diagonal Mar, Barcelona", "location": { "_latitude": 41.4081, "_longitude": 2.2158 }, "status": "actiu" },
+    { "id": "C_CAMB_06", "client_id": "Port Cambrils", "charger_id": "CH_009", "type": "Manteniment Or", "address": "Port de Cambrils", "location": { "_latitude": 41.0652, "_longitude": 1.0612 }, "status": "actiu" },
+    { "id": "C_TOR_07", "client_id": "EbreEnergia", "charger_id": "CH_015", "type": "Revisió Premium", "address": "Estació Tortosa", "location": { "_latitude": 40.8125, "_longitude": 0.5214 }, "status": "actiu" }
+  ],
+  "incidences": [
+    { "id": "INC_01", "charger_id": "CH_001", "priority": "alta", "status": "tancada", "description": "No detecta el vehicle", "created_at": { "_seconds": 1774521600, "_nanoseconds": 0 } },
+    { "id": "INC_02", "charger_id": "CH_005", "priority": "mitja", "status": "oberta", "description": "Pantalla bloquejada", "created_at": { "_seconds": 1774525000, "_nanoseconds": 0 } },
+    { "id": "INC_03", "charger_id": "CH_010", "priority": "alta", "status": "en_proces", "description": "Cable cremat", "created_at": { "_seconds": 1774530000, "_nanoseconds": 0 } },
+    { "id": "INC_04", "charger_id": "CH_009", "priority": "baixa", "status": "oberta", "description": "Llum LED fosa", "created_at": { "_seconds": 1774535000, "_nanoseconds": 0 } },
+    { "id": "INC_05", "charger_id": "CH_015", "priority": "alta", "status": "tancada", "description": "Aturada d'emergencia activada", "created_at": { "_seconds": 1774540000, "_nanoseconds": 0 } }
+  ],
+  "visits": [
+    { "id": "V_01", "technician_id": "T01", "incidence_id": "INC_01", "status": "completada", "visit_type": "avaria", "address": "Parc Central, Tarragona", "location": { "_latitude": 41.1169, "_longitude": 1.2395 }, "planned_date": { "_seconds": 1774612800, "_nanoseconds": 0 } },
+    { "id": "V_02", "technician_id": "T02", "incidence_id": "INC_02", "status": "pendent", "visit_type": "manteniment", "address": "Plaça de la Llibertat, Reus", "location": { "_latitude": 41.1555, "_longitude": 1.1072 }, "planned_date": { "_seconds": 1774616400, "_nanoseconds": 0 } },
+    { "id": "V_03", "technician_id": "T08", "incidence_id": "INC_03", "status": "en_curs", "visit_type": "avaria", "address": "Diagonal Mar, Barcelona", "location": { "_latitude": 41.4081, "_longitude": 2.2158 }, "planned_date": { "_seconds": 1774620000, "_nanoseconds": 0 } },
+    { "id": "V_04", "technician_id": "T04", "incidence_id": "INC_04", "status": "pendent", "visit_type": "manteniment", "address": "Port de Cambrils", "location": { "_latitude": 41.0652, "_longitude": 1.0612 }, "planned_date": { "_seconds": 1774623600, "_nanoseconds": 0 } },
+    { "id": "V_05", "technician_id": "T06", "incidence_id": "INC_05", "status": "completada", "visit_type": "avaria", "address": "Estació Tortosa", "location": { "_latitude": 40.8125, "_longitude": 0.5214 }, "planned_date": { "_seconds": 1774627200, "_nanoseconds": 0 } }
+  ],
+  "reports": [
+    { "id": "R_01", "visit_id": "V_01", "technician_id": "T01", "report_type": "Reparacio", "status": "firmat", "observations": "Substitucio de sensor de proximitat. Test de carrega OK.", "created_at": { "_seconds": 1774618000, "_nanoseconds": 0 } },
+    { "id": "R_02", "visit_id": "V_05", "technician_id": "T06", "report_type": "Reparacio", "status": "firmat", "observations": "Desbloqueig de polsador d'emergencia i revisio de fons.", "created_at": { "_seconds": 1774630000, "_nanoseconds": 0 } },
+    { "id": "R_03", "visit_id": "V_03", "technician_id": "T08", "report_type": "Urgencia", "status": "esborrany", "observations": "Pendent de rebre el cable nou de recanvi.", "created_at": { "_seconds": 1774622000, "_nanoseconds": 0 } },
+    { "id": "R_04", "visit_id": "V_02", "technician_id": "T02", "report_type": "Preventiu", "status": "pendent", "observations": "Encara no s'ha realitzat la inspeccio visual.", "created_at": { "_seconds": 0, "_nanoseconds": 0 } },
+    { "id": "R_05", "visit_id": "V_04", "technician_id": "T04", "report_type": "Preventiu", "status": "pendent", "observations": "Visita programada per a la setmana vinent.", "created_at": { "_seconds": 0, "_nanoseconds": 0 } }
+  ]
+}
