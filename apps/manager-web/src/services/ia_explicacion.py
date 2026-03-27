@@ -162,55 +162,65 @@ def sugerir_asignacion_ia(tareas, tecnicos, correcciones_previas=None):
             ])
         
         prompt = f"""
-Eres un sistema experto en asignación de tareas para técnicos de campo de mantenimiento de cargadores de coches eléctricos.
+Eres un sistema experto en asignación de tareas para técnicos de campo. Tu trabajo es recomendar el mejor técnico para cada tarea.
 
-TU MISIÓN:
-Analiza las siguientes tareas pendientes y técnicos disponibles, y genera una recomendación óptima de asignación para CADA UNA de las tareas.
+IMPORTANT: Las explicaciones DEBEN ser TOTALMENTE DIFERENTES para cada tarea. No uses la misma frase dos veces.
 
-DATOS DE TÉCNICOS DISPONIBLES:
+DATOS DE TÉCNICOS:
 {tecnicos_info}
 
-DATOS DE TAREAS PENDIENTES:
+DATOS DE TAREAS:
 {tareas_info}
 {correcciones_text}
 
-INSTRUCCIONES:
-1. Para CADA tarea, recomienda el técnico más adecuado
-2. Considera: zona del técnico, distancia, carga de trabajo actual, experticia, tipo de tarea
-3. Las incidencias (avaria) deben tener prioridad máxima
-4. Evita asignar más de 4 tareas a un mismo técnico
-5. Si un técnico fue corregido históricamente, considera esa preferencia
+REGLAS:
+1. Cada tarea debe tener un técnico asignado
+2. Considera: zona, distancia, carga de trabajo, experiencia
+3. Las incidencias (avaria) son prioridad alta
+4. Máximo 4 tareas por técnico
 
-FORMATO DE RESPUESTA (JSON obligatorio):
+IMPORTANTE: Para CADA tarea, escribe una explicación ÚNICA y DIFERENTE. No repitas nunca la misma estructura.
+
+Ejemplos de lo que NO hacer:
+- "El técnico es óptimo porque tiene experiencia" (repetitivo)
+- "El técnico es el mejor por su zona" (repetitivo)
+
+Ejemplos de lo que SÍ hacer:
+- "Marc Rovira: Está a solo 5km, conoce al cliente de anteriores instalaciones."
+- "Julia Soler: Experta en mantenimiento preventivo, disponibilidad inmediata mañana."
+- "Sara Luna: única disponible en Tortosa, conoce el restaurante."
+- "Anna Vila: CERTIFICADA para cargadores rápidos Tesla, urgencia del cliente."
+
+IMPORTANTE: Recomienda también la PRIORIDAD de la tarea:
+- "urgente": Para averías (avaria) o emergencias
+- "normal": Para mantenimiento preventivo o rutinario
+- "baja": Para tareas que pueden esperar
+
+FORMATO JSON:
 {{
   "asignaciones": [
     {{
-      "tarea_id": "ID de la tarea",
-      "tecnico_id": "ID del técnico recomendado",
-      "tecnico_nombre": "Nombre del técnico",
-      "zona": "Zona del técnico",
+      "tarea_id": "ID",
+      "tecnico_id": "ID",
+      "tecnico_nombre": "Nombre",
+      "zona": "Zona",
+      "prioridad": "normal",
       "puntuacion": 85,
-      "explicacion": "Breve explicación de por qué este técnico es óptimo (2-3 frases)",
-      "factores": {{
-        "distancia_km": 5.2,
-        "zona_coincide": true,
-        "carga_actual": 2,
-        "experticia_tecnico": 9,
-        "tipo_tarea": "avaria"
-      }}
+      "explicacion": "Frase ÚNICA para esta tarea - incluye detalles específicos distintos a otras tareas",
+      "factores": {{"distancia_km": 5, "zona_coincide": true, "carga_actual": 2, "experticia_tecnico": 9, "tipo_tarea": "avaria"}}
     }}
   ],
-  "resumen": "Breve resumen del proceso de asignación"
+  "resumen": "Resumen"
 }}
 
-IMPORTANTE: Solo devuelve JSON válido, sin texto adicional.
+Cada explicación DEBE contener información única. ¡Sé creativo y específico!
 """
         
         completion = client.chat.completions.create(
             model="llama-3.1-8b-instant",
             messages=[{"role": "user", "content": prompt}],
-            temperature=0.2,
-            max_tokens=4000
+            temperature=0.95,
+            max_tokens=5000
         )
         
         respuesta = completion.choices[0].message.content

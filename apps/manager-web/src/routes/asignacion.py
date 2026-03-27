@@ -8,6 +8,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from src.services.firebase_service import get_technicians, get_visits, get_db
 from src.services.vrp_optimizer import generar_asignaciones, calcular_puntuacion
 from src.services.ia_explicacion import generar_explicacion, sugerir_asignacion_ia, guardar_correccion, obtener_correcciones
+from src.services.geocoding import enrich_task_with_address, get_address_from_coords
 
 asignacion = Blueprint('asignacion', __name__)
 
@@ -19,37 +20,60 @@ def vista_asignacion():
 @asignacion.route('/api/asignacion/datos')
 @login_required
 def obtener_datos():
-    technicians = get_technicians()
-    visits = get_visits()
-    
-    tecnicos = []
-    for t in technicians:
-        tecnicos.append({
-            'id': t.get('id'),
-            'nombre': t.get('name'),
-            'zona': t.get('zone'),
-            'expertice': t.get('expertice', 5),
-            'expert': t.get('expert', False)
-        })
-    
-    tareas_pendientes = []
-    for v in visits:
-        if v.get('status') in ['pendent', 'en_proces']:
-            tareas_pendientes.append({
-                'id': v.get('id'),
-                'tipo': v.get('visit_type', 'manteniment'),
-                'zona': v.get('zona', 'Tarragona'),
-                'lat': v.get('location', {}).get('_latitude', 41.1),
-                'lng': v.get('location', {}).get('_longitude', 1.2),
-                'direccion': v.get('address', ''),
-                'cliente': v.get('cliente', ''),
-                'estado': v.get('status', 'pendent')
+    try:
+        print("[DEBUG] Obteniendo técnicos...")
+        technicians = get_technicians()
+        print(f"[DEBUG] Técnicos obtenidos: {len(technicians)}")
+        
+        print("[DEBUG] Obteniendo visitas...")
+        visits = get_visits()
+        print(f"[DEBUG] Visitas obtenidas: {len(visits)}")
+        
+        tecnicos = []
+        for t in technicians:
+            tecnicos.append({
+                'id': t.get('id'),
+                'nombre': t.get('name'),
+                'zona': t.get('zone'),
+                'expertice': t.get('expertice', 5),
+                'expert': t.get('expert', False)
             })
-    
-    return jsonify({
-        'tecnicos': tecnicos,
-        'tareas_pendientes': tareas_pendientes
-    })
+        
+        tareas_pendientes = []
+        for v in visits:
+            if v.get('status') in ['pendent', 'en_proces']:
+                lat = v.get('location', {}).get('_latitude', 41.1)
+                lng = v.get('location', {}).get('_longitude', 1.2)
+                
+                tarea = {
+                    'id': v.get('id'),
+                    'tipo': v.get('visit_type', 'manteniment'),
+                    'zona': v.get('zona', 'Tarragona'),
+                    'lat': lat,
+                    'lng': lng,
+                    'direccion': v.get('address', ''),
+                    'direccion_completa': v.get('address', ''),
+                    'cliente': v.get('cliente', ''),
+                    'estado': v.get('status', 'pendent')
+                }
+                
+                tareas_pendientes.append(tarea)
+        
+        print(f"[DEBUG] Tareas pendientes: {len(tareas_pendientes)}")
+        
+        return jsonify({
+            'tecnicos': tecnicos,
+            'tareas_pendientes': tareas_pendientes
+        })
+    except Exception as e:
+        print(f"[ERROR] Error en obtener_datos: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            'error': str(e),
+            'tecnicos': [],
+            'tareas_pendientes': []
+        }), 500
 
 @asignacion.route('/api/asignacion/recomendar', methods=['POST'])
 @login_required
@@ -129,17 +153,23 @@ def sugerir_asignacion_ia_endpoint():
         visits = get_visits()
         for v in visits:
             if v.get('status') in ['pendent', 'en_proces']:
-                tareas.append({
+                lat = v.get('location', {}).get('_latitude', 41.1)
+                lng = v.get('location', {}).get('_longitude', 1.2)
+                
+                tarea = {
                     'id': v.get('id'),
                     'tipo': v.get('visit_type', 'manteniment'),
                     'zona': v.get('zona', 'Tarragona'),
-                    'lat': v.get('location', {}).get('_latitude', 41.1),
-                    'lng': v.get('location', {}).get('_longitude', 1.2),
+                    'lat': lat,
+                    'lng': lng,
                     'direccion': v.get('address', ''),
                     'cliente': v.get('cliente', ''),
                     'address': v.get('address', ''),
                     'visit_type': v.get('visit_type', 'manteniment')
-                })
+                }
+                
+                tarea_enriquecida = enrich_task_with_address(tarea)
+                tareas.append(tarea_enriquecida)
     
     db = get_db()
     correcciones = obtener_correcciones(db) if db else []
@@ -162,6 +192,70 @@ def sugerir_asignacion_ia_endpoint():
         'success': False,
         'error': 'No se pudo obtener sugerencias de IA. Usando algoritmo VRP.',
         'usada_ia': False
+    })
+
+@asignacion.route('/api/asignacion/recomendar-una', methods=['POST'])
+@login_required
+def recomendar_una_tarea():
+    """
+    Endpoint para obtener recomendación de IA para UNA sola tarea.
+    Se llama cuando el usuario hace clic en una tarea sin recomendaciones previas.
+    """
+    try:
+        print("[DEBUG] recomendar_una_tarea called")
+        data = request.json or {}
+        tarea = data.get('tarea', {})
+        tecnicos_data = data.get('tecnicos', [])
+        
+        print(f"[DEBUG] Received tarea: {tarea}")
+        print(f"[DEBUG] Received tecnicos: {len(tecnicos_data)}")
+        
+        if not tecnicos_data:
+            print("[DEBUG] No tecnicos received, fetching from database")
+            technicians = get_technicians()
+            for t in technicians:
+                tecnicos_data.append({
+                    'id': t.get('id'),
+                    'name': t.get('name'),
+                    'zone': t.get('zone'),
+                    'expertice': t.get('expertice', 5),
+                    'expert': t.get('expert', False)
+                })
+        
+        print(f"[DEBUG] Total tecnicos: {len(tecnicos_data)}")
+        
+        try:
+            tarea_enriquecida = enrich_task_with_address(tarea)
+        except Exception as ge:
+            print(f"[WARN] Geocoding failed: {ge}, using original tarea")
+            tarea_enriquecida = tarea
+        
+        print(f"[DEBUG] Tarea enriquecida: {tarea_enriquecida}")
+        
+        db = get_db()
+        correcciones = obtener_correcciones(db) if db else []
+        
+        resultado_ia = sugerir_asignacion_ia([tarea_enriquecida], tecnicos_data, correcciones)
+        
+        print(f"[DEBUG] Resultado IA: {resultado_ia}")
+        
+        if resultado_ia and resultado_ia.get('asignaciones'):
+            asignacion = resultado_ia.get('asignaciones', [])[0]
+            print(f"[DEBUG] Returning asignacion: {asignacion}")
+            return jsonify({
+                'success': True,
+                'asignacion': asignacion
+            })
+        else:
+            print("[DEBUG] No asignaciones returned from IA")
+    except Exception as e:
+        print(f"[ERROR] Error en recomendar_una_tarea: {e}")
+        import traceback
+        traceback.print_exc()
+    
+    return jsonify({
+        'success': False,
+        'error': 'No se pudo obtener recomendación de IA'
     })
 
 @asignacion.route('/api/asignacion/generar', methods=['POST'])
@@ -190,17 +284,23 @@ def generar_recomendaciones():
         visits = get_visits()
         for v in visits:
             if v.get('status') in ['pendent', 'en_proces']:
-                tareas.append({
+                lat = v.get('location', {}).get('_latitude', 41.1)
+                lng = v.get('location', {}).get('_longitude', 1.2)
+                
+                tarea = {
                     'id': v.get('id'),
                     'tipo': v.get('visit_type', 'manteniment'),
                     'zona': v.get('zona', 'Tarragona'),
-                    'lat': v.get('location', {}).get('_latitude', 41.1),
-                    'lng': v.get('location', {}).get('_longitude', 1.2),
+                    'lat': lat,
+                    'lng': lng,
                     'direccion': v.get('address', ''),
                     'cliente': v.get('cliente', ''),
                     'address': v.get('address', ''),
                     'visit_type': v.get('visit_type', 'manteniment')
-                })
+                }
+                
+                tarea_enriquecida = enrich_task_with_address(tarea)
+                tareas.append(tarea_enriquecida)
     
     db = get_db()
     correcciones = obtener_correcciones(db) if db else []
@@ -318,4 +418,75 @@ def asignar_tarea():
     return jsonify({
         'success': True,
         'message': f'Tarea {tarea_id} asignada al técnico {tecnico_id} con prioridad {prioridad}'
+    })
+
+@asignacion.route('/api/asignacion/aplicar', methods=['POST'])
+@login_required
+def aplicar_cambios():
+    """
+    Aplica todas las asignaciones pendientes de una sola vez.
+    Recibe un array de {tarea_id, tecnico_id, tecnico_original (opcional), razon (opcional)}
+    """
+    data = request.json or {}
+    asignaciones = data.get('asignaciones', [])
+    
+    if not asignaciones:
+        return jsonify({
+            'success': False,
+            'error': 'No hay asignaciones para aplicar'
+        })
+    
+    db = get_db()
+    
+    if not db:
+        return jsonify({
+            'success': False,
+            'error': 'No se pudo conectar a la base de datos'
+        })
+    
+    resultados = []
+    errores = []
+    
+    for asig in asignaciones:
+        tarea_id = asig.get('tarea_id')
+        tecnico_id = asig.get('tecnico_id')
+        tecnico_original = asig.get('tecnico_original')
+        razon = asig.get('razon', '')
+        prioridad = asig.get('prioridad', 'normal')
+        
+        try:
+            update_data = {
+                'technician_id': tecnico_id,
+                'status': 'assignat',
+                'prioridad': prioridad
+            }
+            db.collection('visits').document(tarea_id).update(update_data)
+            
+            if tecnico_original and tecnico_id != tecnico_original and razon:
+                guardar_correccion(
+                    db,
+                    tarea_id,
+                    tecnico_original,
+                    tecnico_id,
+                    razon,
+                    'admin'
+                )
+            
+            resultados.append({
+                'tarea_id': tarea_id,
+                'tecnico_id': tecnico_id,
+                'prioridad': prioridad,
+                'success': True
+            })
+        except Exception as e:
+            errores.append({
+                'tarea_id': tarea_id,
+                'error': str(e)
+            })
+    
+    return jsonify({
+        'success': len(errores) == 0,
+        'message': f'Se aplicaron {len(resultados)} asignaciones',
+        'resultados': resultados,
+        'errores': errores
     })
