@@ -9,6 +9,10 @@ tareas = Blueprint('tareas', __name__)
 @tareas.route('/tareas')
 @login_required
 def lista_tareas():
+    tipo_filter = request.args.get('tipo', '')
+    zona_filter = request.args.get('zona', '')
+    estado_filter = request.args.get('estado', '')
+    q_filter = request.args.get('q', '')
 
     visits = get_visits()
     incidents = get_incidents()
@@ -39,6 +43,17 @@ def lista_tareas():
             'en_proces': 'En proceso',
             'completada': 'Completada'
         }.get(task.get('status', ''), task.get('status', ''))
+        
+        if tipo_filter and task.get('visit_type') != tipo_filter:
+            continue
+        if zona_filter and task.get('zona') != zona_filter:
+            continue
+        if estado_filter and task.get('status') != estado_filter:
+            continue
+        if q_filter:
+            search_text = f"{task.get('id', '')} {task.get('address', '')} {task.get('cliente', '')}".lower()
+            if q_filter.lower() not in search_text:
+                continue
         
         tasks.append(task)
     

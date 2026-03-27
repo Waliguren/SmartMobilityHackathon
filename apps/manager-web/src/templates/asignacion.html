@@ -98,8 +98,9 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2><i class="bi bi-robot"></i> Asistente de Asignación</h2>
         <div>
-            <button class="btn btn-generar text-white" onclick="generarRecomendaciones()" id="btn-generar">
-                <i class="bi bi-stars"></i> Generar Recomendaciones
+            <button class="btn btn-success" onclick="aplicarCambios()" id="btn-aplicar" disabled>
+                <i class="bi bi-check2-all"></i> Aplicar Cambios
+                <span class="badge bg-light text-dark ms-1" id="contador-cambios">0</span>
             </button>
         </div>
     </div>
@@ -107,8 +108,8 @@
     <div class="alert alert-info d-flex align-items-center" role="alert">
         <i class="bi bi-info-circle me-2"></i>
         <div>
-            <strong>IA Activa:</strong> El sistema analizará todas las tareas pendientes y te recomendará el técnico óptimo para cada una.
-            Las explicaciones son generadas por inteligencia artificial considerando zona, distancia, carga de trabajo y experiencia.
+            <strong>IA Activa:</strong> Haz clic en cada tarea para ver la recomendación de la IA. 
+            Cuando finishes, pulsa <strong>Aplicar Cambios</strong> para guardar todas las asignaciones.
         </div>
     </div>
 
@@ -176,27 +177,58 @@
     let tecnicos = [];
     let tareasPendientes = [];
     let recomendaciones = [];
+    let cambiosPendientes = [];
+    let tareasProcesadas = [];
     let usandoIA = false;
     let totalTareasProcesadas = 0;
 
     document.addEventListener('DOMContentLoaded', function() {
+        console.log('Page loaded, starting to load data...');
         cargarDatos();
+        
+        document.getElementById('modal-recomendacion').addEventListener('hidden.bs.modal', function() {
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+        });
+        
+        document.getElementById('modal-editar').addEventListener('hidden.bs.modal', function() {
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+        });
     });
 
     function cargarDatos() {
+        console.log('Cargando datos...');
         fetch('/api/asignacion/datos')
-            .then(response => response.json())
+            .then(response => {
+                console.log('Response status:', response.status);
+                return response.json();
+            })
             .then(data => {
-                tecnicos = data.tecnicos;
-                tareasPendientes = data.tareas_pendientes;
+                console.log('Datos recibidos:', data);
+                console.log('Técnicos:', data.tecnicos);
+                console.log('Tareas pendientes:', data.tareas_pendientes);
+                tecnicos = data.tecnicos || [];
+                tareasPendientes = data.tareas_pendientes || [];
                 renderizarTecnicos();
                 renderizarTareas();
+            })
+            .catch(error => {
+                console.error('Error cargando datos:', error);
             });
     }
 
     function renderizarTecnicos() {
+        console.log('Renderizando técnicos, total:', tecnicos.length);
         const container = document.getElementById('panel-tecnicos');
         container.innerHTML = '';
+        
+        if (!tecnicos || tecnicos.length === 0) {
+            container.innerHTML = '<div class="text-center text-muted py-4"><i class="bi bi-person-x display-4"></i><p>No hay técnicos disponibles</p></div>';
+            return;
+        }
         
         tecnicos.forEach((t, index) => {
             const carga = t.carga_actual || 0;
@@ -226,8 +258,10 @@
     }
 
     function renderizarTareas() {
+        console.log('Renderizando tareas, total:', tareasPendientes.length);
         const container = document.getElementById('panel-tareas');
-        document.getElementById('contador-tareas').textContent = `${tareasPendientes.length} tareas`;
+        const pendientesCount = tareasPendientes.length - cambiosPendientes.length;
+        document.getElementById('contador-tareas').textContent = `${pendientesCount} tareas`;
         container.innerHTML = '';
         
         if (tareasPendientes.length === 0) {
@@ -236,8 +270,8 @@
         }
         
         tareasPendientes.forEach((tarea, index) => {
-            const recomendada = recomendaciones.find(r => r.tarea && r.tarea.id === tarea.id) || 
-                              recomendaciones.find(r => r.tarea_id === tarea.id);
+            const cambio = cambiosPendientes.find(c => c.tarea_id === tarea.id);
+            const procesada = tareasProcesadas.includes(tarea.id);
             
             let tipoClass = tarea.tipo || 'manteniment';
             if (tipoClass === 'avaria') tipoClass = 'incidencia';
@@ -249,20 +283,25 @@
             else if (tarea.tipo === 'manteniment') badgeTipo = 'primary';
             else if (tarea.tipo === 'preventiu') badgeTipo = 'success';
             
-            const nombreTecnico = recomendada ? (recomendada.recomendacion?.tecnico?.nombre || 
-                                                 recomendada.tecnico_nombre || 
-                                                 recomendada.tecnico_id) : null;
-            const puntuacion = recomendada?.recomendacion?.puntuacion || recomendada?.puntuacion || 0;
+            const nombreTecnico = cambio ? cambio.tecnico_nombre : null;
+            const puntuacion = cambio ? cambio.puntuacion : 0;
+            
+            let statusBadge = '';
+            if (cambio) {
+                statusBadge = `<span class="badge bg-success ms-1"><i class="bi bi-check"></i> Asignado</span>`;
+            } else if (procesada) {
+                statusBadge = `<span class="badge bg-secondary ms-1"><i class="bi bi-eye"></i> Revisado</span>`;
+            }
             
             const html = `
-                <div class="card mb-2 tarea-pendiente ${tipoClass}" onclick="verRecomendacion('${tarea.id}')">
+                <div class="card mb-2 tarea-pendiente ${tipoClass} ${cambio ? 'asignada' : ''}" onclick="verRecomendacion('${tarea.id}')">
                     <div class="card-body py-2">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
                                 <strong>${tarea.id}</strong> - ${tarea.cliente || tarea.direccion}
                                 <span class="badge bg-${badgeTipo} ms-1">${tarea.tipo?.replace('_', ' ') || 'N/A'}</span>
+                                ${statusBadge}
                             </div>
-                            ${recomendada ? `<span class="badge badge-recomendado ${usandoIA ? 'bg-success ia-badge' : 'bg-success'}">★ Recomendado</span>` : ''}
                         </div>
                         <small class="text-muted">${tarea.direccion}</small>
                         ${nombreTecnico ? `<div class="mt-1"><small class="text-success">→ ${nombreTecnico} (${puntuacion}/100)</small></div>` : ''}
@@ -271,111 +310,321 @@
             `;
             container.innerHTML += html;
         });
-    }
-
-    function generarRecomendaciones() {
-        usandoIA = true;
-        const btn = document.getElementById('btn-generar');
-        btn.disabled = true;
-        btn.innerHTML = '<span class="loading-spinner me-2"></span> Analizando con IA...';
         
-        fetch('/api/asignacion/generar', { 
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ tecnicos: tecnicos, tareas: tareasPendientes })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                recomendaciones = data.asignaciones || [];
-                totalTareasProcesadas = data.total_tareas || 0;
-                renderizarTareas();
-                
-                tecnicos.forEach((t, i) => {
-                    const asignadas = recomendaciones.filter(r => 
-                        (r.tecnico_id === t.id) || (r.recomendacion?.tecnico?.id === t.id)
-                    ).length;
-                    t.carga_actual = asignadas;
-                });
-                renderizarTecnicos();
-                
-                if (data.resumen) {
-                    console.log('Resumen IA:', data.resumen);
-                }
-                
-                alert(`¡Recomendaciones generadas! Se procesaron ${totalTareasProcesadas} tareas.`);
-            } else {
-                alert('Error al generar recomendaciones: ' + (data.error || 'Error desconocido'));
-            }
-            
-            btn.disabled = false;
-            btn.innerHTML = '<i class="bi bi-stars"></i> Generar Recomendaciones';
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Error al conectar con el servicio de IA.');
-            btn.disabled = false;
-            btn.innerHTML = '<i class="bi bi-stars"></i> Generar Recomendaciones';
-        });
+        actualizarBotonAplicar();
+    }
+    
+    function actualizarBotonAplicar() {
+        const btn = document.getElementById('btn-aplicar');
+        const contador = document.getElementById('contador-cambios');
+        contador.textContent = cambiosPendientes.length;
+        btn.disabled = cambiosPendientes.length === 0;
     }
 
     function verRecomendacion(tareaId) {
-        const rec = recomendaciones.find(r => (r.tarea && r.tarea.id === tareaId) || r.tarea_id === tareaId);
+        console.log('=== verRecomendacion called ===');
+        console.log('Task ID:', tareaId);
+        console.log('Total tareasPendientes:', tareasPendientes.length);
         
-        if (!rec) {
-            alert('Primero genera las recomendaciones');
+        if (!tareaId) {
+            console.error('No tareaId provided!');
             return;
         }
         
-        const factores = rec.factores || rec.recomendacion?.factores || {};
-        const explicacion = rec.explicacion || rec.recomendacion?.explicacion || 'No hay explicación disponible';
-        const puntuacion = rec.puntuacion || rec.recomendacion?.puntuacion || 0;
-        const tecnicoId = rec.tecnico_id || rec.recomendacion?.tecnico?.id || rec.tecnico?.id;
-        const tecnicoNombre = rec.tecnico_nombre || rec.recomendacion?.tecnico?.nombre || rec.tecnico?.nombre || tecnicoId;
-        const tecnicoZona = rec.zona || rec.recomendacion?.tecnico?.zone || rec.tecnico?.zone || '';
-        const tipoTarea = rec.tipo_tarea || rec.tarea?.tipo || 'tarea';
+        const tarea = tareasPendientes.find(t => t.id === tareaId);
+        console.log('Found tarea:', tarea);
         
-        const html = `
+        if (!tarea) {
+            console.error('Tarea not found!');
+            return;
+        }
+        
+        const cambioGuardado = cambiosPendientes.find(c => c.tarea_id === tareaId);
+        const rec = recomendaciones.find(r => (r.tarea && r.tarea.id === tareaId) || r.tarea_id === tareaId);
+        
+        let factores = {};
+        let explicacion = '';
+        let puntuacion = 0;
+        let tecnicoId = '';
+        let tecnicoNombre = '';
+        let prioridad = 'normal';
+        let tipoTarea = '';
+        let direccion = '';
+        let lat = 0;
+        let lng = 0;
+        let cliente = '';
+        
+        if (tarea) {
+            direccion = tarea.direccion_completa || tarea.direccion || tarea.address || 'Sin dirección';
+            lat = tarea.lat || tarea.location?._latitude || 0;
+            lng = tarea.lng || tarea.location?._longitude || 0;
+            cliente = tarea.cliente || '';
+            tipoTarea = tarea.tipo || tarea.visit_type || 'tarea';
+        }
+        
+        if (rec) {
+            factores = rec.factores || rec.recomendacion?.factores || {};
+            explicacion = rec.explicacion || rec.recomendacion?.explicacion || '';
+            puntuacion = rec.puntuacion || rec.recomendacion?.puntuacion || 0;
+            tecnicoId = rec.tecnico_id || rec.recomendacion?.tecnico?.id || rec.tecnico?.id || '';
+            tecnicoNombre = rec.tecnico_nombre || rec.recomendacion?.tecnico?.nombre || rec.tecnico?.nombre || '';
+            prioridad = rec.prioridad || 'normal';
+        }
+        
+        let contenidoModal = '';
+        
+        const latlng = lat && lng ? `${lat.toFixed(5)}, ${lng.toFixed(5)}` : 'Sin coordenadas';
+        
+        if (cambioGuardado) {
+            tecnicoId = cambioGuardado.tecnico_id;
+            tecnicoNombre = cambioGuardado.tecnico_nombre;
+            puntuacion = cambioGuardado.puntuacion || 100;
+            prioridad = cambioGuardado.prioridad || 'normal';
+            explicacion = cambioGuardado.razon ? `Cambio guardado: ${cambioGuardado.razon}` : 'Asignación guardada';
+            factores = {};
+            mostrarModalRecomendacion(tarea, tecnicoId, tecnicoNombre, puntuacion, factores, explicacion, latlng, prioridad);
+        } else if (!rec) {
+            console.log('Fetching AI recommendation for task:', tareaId);
+            contenidoModal = `
+                <div class="text-center py-3">
+                    <div class="spinner-border text-primary mb-3" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                    <p>Obteniendo recomendación de IA...</p>
+                </div>
+            `;
+            document.getElementById('modal-contenido-recomendacion').innerHTML = contenidoModal;
+            new bootstrap.Modal(document.getElementById('modal-recomendacion')).show();
+            
+            fetch('/api/asignacion/recomendar-una', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ tarea: tarea, tecnicos: tecnicos })
+            })
+            .then(response => {
+                console.log('Response:', response.status);
+                return response.json();
+            })
+            .then(data => {
+                console.log('AI Response data:', data);
+                if (data.asignacion) {
+                    const a = data.asignacion;
+                    factores = a.factores || {};
+                    explicacion = a.explicacion || '';
+                    puntuacion = a.puntuacion || 0;
+                    tecnicoId = a.tecnico_id || '';
+                    tecnicoNombre = a.tecnico_nombre || '';
+                    prioridad = a.prioridad || 'normal';
+                    
+                    mostrarModalRecomendacion(tarea, tecnicoId, tecnicoNombre, puntuacion, factores, explicacion, latlng, prioridad);
+                } else {
+                    console.log('No asignacion in response, showing edit modal. Error:', data.error);
+                    alert('Error: ' + (data.error || 'No se pudo obtener recomendación de IA'));
+                    mostrarModalEdicion(tareaId, '');
+                }
+            })
+            .catch((error) => {
+                console.error('Error fetching recommendation:', error);
+                mostrarModalEdicion(tareaId, '');
+            });
+        } else {
+            mostrarModalRecomendacion(tarea, tecnicoId, tecnicoNombre, puntuacion, factores, explicacion, latlng, prioridad);
+        }
+    }
+    
+    function mostrarModalRecomendacion(tarea, tecnicoId, tecnicoNombre, puntuacion, factores, explicacion, latlng, prioridad = 'normal') {
+        const tipoTarea = tarea?.tipo || tarea?.visit_type || 'tarea';
+        const cliente = tarea?.cliente || '';
+        const direccion = tarea?.direccion_completa || tarea?.direccion || tarea?.address || 'Sin dirección';
+        
+        let opcionesHtml = '';
+        tecnicos.forEach((t, i) => {
+            const carga = t.carga_actual || 0;
+            const seleccionado = t.id === tecnicoId ? 'checked' : '';
+            opcionesHtml += `
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="radio" name="tecnico-seleccionar" 
+                           value="${t.id}" id="tec-seleccionar-${t.id}" ${seleccionado}>
+                    <label class="form-check-label" for="tec-seleccionar-${t.id}">
+                        <strong>${t.nombre || t.id}</strong> - ${t.zona}
+                        <br><small class="text-muted">Carga: ${carga}/4 tareas</small>
+                    </label>
+                </div>
+            `;
+        });
+        
+        const prioridadBadge = {
+            'urgente': '<span class="badge bg-danger">Urgente</span>',
+            'normal': '<span class="badge bg-primary">Normal</span>',
+            'baja': '<span class="badge bg-success">Baja</span>'
+        };
+        
+        const contenidoHtml = `
             <div class="mb-3">
                 <h6><span class="badge bg-${tipoTarea === 'avaria' ? 'danger' : tipoTarea === 'manteniment' ? 'primary' : 'success'}">
-                    ${tipoTarea === 'avaria' ? 'Incidencia' : tipoTarea === 'manteniment' ? 'Mantenimiento' : 'Preventivo'}
-                </span> ${rec.cliente || rec.tarea?.cliente || tareaId}</h6>
-                <p class="mb-1"><strong>Dirección:</strong> ${rec.direccion || rec.address || rec.tarea?.direccion || 'N/A'}</p>
+                    ${tipoTarea === 'avaria' ? 'Incidencia' : tipoTarea === 'manteniment' ? 'Mantenimiento' : tipoTarea === 'preventiu' ? 'Preventivo' : 'Tarea'}
+                </span> ${cliente || tarea?.id}</h6>
+                <p class="mb-1"><strong>Dirección:</strong> ${direccion}</p>
+                <p class="mb-1"><small class="text-muted"><i class="bi bi-geo-alt"></i> Coordenadas: ${latlng}</small></p>
             </div>
             <hr>
             <div class="mb-3">
-                <h6>Puntuación: <strong>${puntuacion}/100</strong> <span class="badge ia-badge">IA</span></h6>
+                <h6><strong>Recomendación de la IA:</strong></h6>
+                <p class="text-muted bg-light p-3 rounded mb-2">
+                    <strong>${tecnicoNombre || tecnicoId}</strong> (Puntuación: ${puntuacion}/100)
+                    ${prioridadBadge[prioridad] || prioridadBadge['normal']}
+                </p>
+                ${explicacion ? `<p class="text-muted small"><em>"${explicacion}"</em></p>` : ''}
+            </div>
+            <hr>
+            <div class="mb-3">
+                <label class="form-label fw-bold">Prioridad:</label>
+                <select class="form-select mb-3" id="prioridad-seleccionar">
+                    <option value="urgente" ${prioridad === 'urgente' ? 'selected' : ''}>Urgente</option>
+                    <option value="normal" ${prioridad === 'normal' ? 'selected' : ''}>Normal</option>
+                    <option value="baja" ${prioridad === 'baja' ? 'selected' : ''}>Baja</option>
+                </select>
             </div>
             <div class="mb-3">
-                <h6>💡 Explicación de la IA:</h6>
-                <p class="text-muted bg-light p-3 rounded">${explicacion}</p>
-            </div>
-            <div class="mb-3">
-                <h6>📊 Factores considerados:</h6>
-                <div class="factor-item">
-                    <span>Distancia:</span>
-                    <span>${factores.distancia_km || factores.distancia || 0} km</span>
+                <label class="form-label fw-bold"><i class="bi bi-hand-index"></i> ¿Estás de acuerdo o prefieres cambiar?</label>
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="radio" name="opcion-asignacion" value="aceptar" id="opcion-aceptar" checked>
+                    <label class="form-check-label" for="opcion-aceptar">
+                        Aceptar recomendación de IA
+                    </label>
                 </div>
-                <div class="factor-item">
-                    <span>Carga actual del técnico:</span>
-                    <span>${factores.carga_actual || 0} tareas</span>
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="radio" name="opcion-asignacion" value="cambiar" id="opcion-cambiar">
+                    <label class="form-check-label" for="opcion-cambiar">
+                        Elegir otro técnico manualmente
+                    </label>
                 </div>
-                <div class="factor-item">
-                    <span>Zona coincide:</span>
-                    <span>${factores.zona_coincide ? 'Sí' : 'No'}</span>
-                </div>
-                <div class="factor-item">
-                    <span>Experiencia del técnico:</span>
-                    <span>${factores.experticia_tecnico || factores.expertice || 'N/A'}/10</span>
+                <div id="div-opciones-tecnicos" class="mt-2" style="display: none;">
+                    ${opcionesHtml}
                 </div>
             </div>
             <div class="d-flex justify-content-between mt-4">
-                <button class="btn btn-warning" onclick="editarAsignacion('${tareaId}', '${tecnicoId}')">
-                    <i class="bi bi-pencil"></i> Editar
-                </button>
-                <button class="btn btn-success" onclick="confirmarAsignacion('${tareaId}', '${tecnicoId}')">
+                <button class="btn btn-secondary" onclick="cerrarModalSimple()">Cancelar</button>
+                <button class="btn btn-primary" onclick="confirmarOpcion('${tarea?.id || tareaId}', '${tecnicoId}', '${tecnicoNombre}')">
                     <i class="bi bi-check-lg"></i> Confirmar
                 </button>
+            </div>
+        `;
+        
+        document.getElementById('modal-contenido-recomendacion').innerHTML = contenidoHtml;
+        new bootstrap.Modal(document.getElementById('modal-recomendacion')).show();
+        
+        document.querySelectorAll('input[name="opcion-asignacion"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                const div = document.getElementById('div-opciones-tecnicos');
+                if (this.value === 'cambiar') {
+                    div.style.display = 'block';
+                } else {
+                    div.style.display = 'none';
+                }
+            });
+        });
+    }
+    
+    function cerrarModalSimple() {
+        cerrarModal();
+    }
+    
+    function confirmarOpcion(tareaId, tecnicoIdOriginal, tecnicoNombreOriginal) {
+        const opcion = document.querySelector('input[name="opcion-asignacion"]:checked').value;
+        const prioridad = document.getElementById('prioridad-seleccionar')?.value || 'normal';
+        
+        if (opcion === 'aceptar') {
+            guardarCambioLocal(tareaId, tecnicoIdOriginal, tecnicoNombreOriginal, tecnicoIdOriginal, '', prioridad);
+        } else {
+            const nuevoTecnico = document.querySelector('input[name="tecnico-seleccionar"]:checked');
+            if (nuevoTecnico) {
+                const razon = document.getElementById('razon-cambio')?.value || '';
+                const tecnicoNombre = tecnicos.find(t => t.id === nuevoTecnico.value)?.nombre || nuevoTecnico.value;
+                guardarCambioLocal(tareaId, nuevoTecnico.value, tecnicoNombre, tecnicoIdOriginal, razon, prioridad);
+            } else {
+                alert('Selecciona un técnico');
+            }
+        }
+    }
+    
+    function guardarCambioLocal(tareaId, tecnicoId, tecnicoNombre, tecnicoOriginal, razon, prioridad = 'normal') {
+        const cambioExistente = cambiosPendientes.findIndex(c => c.tarea_id === tareaId);
+        
+        const cambio = {
+            tarea_id: tareaId,
+            tecnico_id: tecnicoId,
+            tecnico_nombre: tecnicoNombre,
+            tecnico_original: tecnicoOriginal,
+            razon: razon,
+            prioridad: prioridad,
+            puntuacion: 100
+        };
+        
+        if (cambioExistente >= 0) {
+            cambiosPendientes[cambioExistente] = cambio;
+        } else {
+            cambiosPendientes.push(cambio);
+        }
+        
+        if (!tareasProcesadas.includes(tareaId)) {
+            tareasProcesadas.push(tareaId);
+        }
+        
+        cerrarModal();
+        renderizarTareas();
+    }
+    
+    function cerrarModal() {
+        const modal = document.getElementById('modal-recomendacion');
+        const modalInstance = bootstrap.Modal.getInstance(modal);
+        if (modalInstance) {
+            modalInstance.hide();
+        }
+        setTimeout(() => {
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.removeProperty('overflow');
+            document.body.style.removeProperty('padding-right');
+        }, 200);
+    }
+    
+    function mostrarModalEdicion(tareaId, tecnicoOriginal) {
+        let opcionesHtml = '';
+        tecnicos.forEach((t, i) => {
+            const carga = t.carga_actual || 0;
+            opcionesHtml += `
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="radio" name="tecnico-editar" 
+                           value="${t.id}" id="tec-${t.id}" ${t.id === tecnicoOriginal ? 'checked' : ''}>
+                    <label class="form-check-label" for="tec-${t.id}">
+                        <strong>${t.nombre || t.id}</strong> - ${t.zona}
+                        <br><small class="text-muted">Carga: ${carga}/4 tareas</small>
+                    </label>
+                </div>
+            `;
+        });
+        
+        const html = `
+            <div class="mb-3">
+                <label class="form-label">Técnico:</label>
+                ${opcionesHtml}
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Prioridad:</label>
+                <select class="form-select" id="prioridad-editar">
+                    <option value="urgente">Urgente</option>
+                    <option value="normal" selected>Normal</option>
+                    <option value="baja">Baja</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Razón del cambio (para aprendizaje de la IA):</label>
+                <textarea class="form-control" id="razon-cambio" rows="2" placeholder="¿Por qué cambias esta asignación?"></textarea>
+            </div>
+            <div class="d-flex justify-content-end">
+                <button class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancelar</button>
+                <button class="btn btn-primary" onclick="guardarEdicion('${tareaId}', '${tecnicoOriginal}')">Guardar Cambios</button>
             </div>
         `;
         
@@ -427,54 +676,50 @@
         new bootstrap.Modal(document.getElementById('modal-editar')).show();
     }
 
-    function confirmarAsignacion(tareaId, tecnicoId) {
-        fetch('/api/asignacion/asignar', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ tarea_id: tareaId, tecnico_id: tecnicoId, prioridad: 'normal' })
-        })
-        .then(response => response.json())
-        .then(data => {
-            bootstrap.Modal.getInstance(document.getElementById('modal-recomendacion')).hide();
-            tareasPendientes = tareasPendientes.filter(t => t.id !== tareaId);
-            renderizarTareas();
-            alert('Tarea asignada correctamente');
-            cargarDatos();
-        });
-    }
-
     function guardarEdicion(tareaId, tecnicoOriginal) {
         const tecnicoNuevo = document.querySelector('input[name="tecnico-editar"]:checked').value;
         const prioridad = document.getElementById('prioridad-editar').value;
         const razon = document.getElementById('razon-cambio').value;
         
-        if (tecnicoNuevo !== tecnicoOriginal && razon) {
-            fetch('/api/asignacion/corregir', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    tarea_id: tareaId, 
-                    tecnico_original: tecnicoOriginal,
-                    tecnico_corregido: tecnicoNuevo,
-                    razon: razon
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log('Corrección guardada para aprendizaje de IA:', data);
-            });
+        const tecnicoNombre = tecnicos.find(t => t.id === tecnicoNuevo)?.nombre || tecnicoNuevo;
+        
+        guardarCambioLocal(tareaId, tecnicoNuevo, tecnicoNombre, tecnicoOriginal, razon, prioridad);
+    }
+    
+    function aplicarCambios() {
+        if (cambiosPendientes.length === 0) {
+            alert('No hay cambios para aplicar');
+            return;
         }
         
-        fetch('/api/asignacion/asignar', {
+        const btn = document.getElementById('btn-aplicar');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="loading-spinner me-2"></span> Aplicando...';
+        
+        fetch('/api/asignacion/aplicar', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ tarea_id: tareaId, tecnico_id: tecnicoNuevo, prioridad: prioridad })
+            body: JSON.stringify({ asignaciones: cambiosPendientes })
         })
         .then(response => response.json())
         .then(data => {
-            bootstrap.Modal.getInstance(document.getElementById('modal-editar')).hide();
-            alert('Asignación guardada. Corrección registrada para aprendizaje de IA.');
-            cargarDatos();
+            if (data.success) {
+                alert(`¡Éxito! Se aplicaron ${cambiosPendientes.length} asignaciones`);
+                cambiosPendientes = [];
+                tareasProcesadas = [];
+                actualizarBotonAplicar();
+                cargarDatos();
+            } else {
+                alert('Error al aplicar cambios: ' + (data.error || 'Error desconocido'));
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-check2-all"></i> Aplicar Cambios <span class="badge bg-light text-dark ms-1" id="contador-cambios">' + cambiosPendientes.length + '</span>';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al conectar con el servidor');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-check2-all"></i> Aplicar Cambios <span class="badge bg-light text-dark ms-1" id="contador-cambios">' + cambiosPendientes.length + '</span>';
         });
     }
 </script>
